@@ -73,21 +73,30 @@ export default function ArchitectureDiagram() {
 
                   <!-- Sistemas Backend (derecha) -->
                   <g id="backend">
-                    <rect x="420" y="300" width="150" height="80" rx="10" fill="#ffebee" stroke="#d32f2f" stroke-width="2"/>
-                    <text x="495" y="325" text-anchor="middle" font-size="12" font-weight="bold">🔌 Sistemas Backend</text>
-                    <text x="495" y="340" text-anchor="middle" font-size="9">• GDS (Amadeus/Sabre)</text>
-                    <text x="495" y="355" text-anchor="middle" font-size="9">• Estado vuelos • Equipaje</text>
+                    <rect x="420" y="300" width="170" height="110" rx="10" fill="#ffebee" stroke="#d32f2f" stroke-width="2"/>
+                    <text x="505" y="325" text-anchor="middle" font-size="12" font-weight="bold">🔌 Sistemas Backend</text>
+                    <text x="505" y="345" text-anchor="middle" font-size="9">• GDS (Amadeus/Sabre)</text>
+                    <text x="505" y="360" text-anchor="middle" font-size="9">• CRM Clientes</text>
+                    <text x="505" y="375" text-anchor="middle" font-size="9">• Facturación/Pagos</text>
                   </g>
 
-                  <!-- Flechas bidireccionales -->
-                  <path d="M 180 340 L 200 340" stroke="#f57c00" stroke-width="2" marker-end="url(#arrowhead)"/>
-                  <path d="M 200 325 L 180 325" stroke="#7b1fa2" stroke-width="2" marker-end="url(#arrowhead)"/>
-                  
-                  <path d="M 400 340 L 420 340" stroke="#7b1fa2" stroke-width="2" marker-end="url(#arrowhead)"/>
-                  <path d="M 420 325 L 400 325" stroke="#d32f2f" stroke-width="2" marker-end="url(#arrowhead)"/>
+                  <!-- Observabilidad / Métricas -->
+                  <g id="observability">
+                    <rect x="850" y="400" width="200" height="120" rx="10" fill="#ede7f6" stroke="#5e35b1" stroke-width="2"/>
+                    <text x="950" y="425" text-anchor="middle" font-size="14" font-weight="bold">📊 Observabilidad</text>
+                    <text x="950" y="450" text-anchor="middle" font-size="10">• Monitoring (Prometheus)</text>
+                    <text x="950" y="465" text-anchor="middle" font-size="10">• Logging (ELK)</text>
+                    <text x="950" y="480" text-anchor="middle" font-size="10">• Tracing (Jaeger)</text>
+                  </g>
 
-                  <!-- Flecha hacia Motor de Decisiones -->
-                  <path d="M 300 360 L 300 420" stroke="#7b1fa2" stroke-width="2" marker-end="url(#arrowhead)"/>
+                  <!-- Agente Humano -->
+                  <g id="human-agent">
+                    <rect x="420" y="560" width="170" height="60" rx="10" fill="#e0f2f1" stroke="#00897b" stroke-width="2"/>
+                    <text x="505" y="590" text-anchor="middle" font-size="13" font-weight="bold">👩‍💼 Agente Humano</text>
+                  </g>
+
+                  <!-- Flecha de Escalamiento -->
+                  <path d="M 300 500 L 505 560" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowhead)"/>
 
                   <!-- Motor de Decisiones -->
                   <g id="decisions">
