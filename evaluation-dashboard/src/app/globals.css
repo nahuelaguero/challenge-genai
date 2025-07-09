@@ -1,0 +1,219 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Asegurar que todos los títulos y textos sean negros y visibles */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #000000 !important;
+  font-weight: bold !important;
+}
+
+/* Párrafos sin clases de color específicas */
+p:not([class*="text-"]) {
+  color: #1a1a1a !important;
+}
+
+/* Spans sin clases de color */
+span:not([class*="text-"]) {
+  color: #1a1a1a !important;
+}
+
+/* Divs - más específico para no romper layouts */
+div:not([class*="text-"]):not([class*="bg-"]):not([class*="border"]) {
+  color: #1a1a1a;
+}
+
+/* Asegurar que los labels y textos importantes sean negros */
+label {
+  color: #000000 !important;
+  font-weight: bold !important;
+}
+
+strong,
+b {
+  color: #000000 !important;
+  font-weight: bold !important;
+}
+
+/* Código y pre formateado - Solo aplicar estilos si no tienen clases específicas */
+code:not([class*="language-"]):not([class*="font-mono"]) {
+  color: #000000 !important;
+  background-color: #f5f5f5 !important;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* Asegurar que el código con clases específicas mantenga su estilo */
+.font-mono {
+  color: inherit;
+}
+
+/* Código en bloques pre con fondo oscuro */
+.bg-gray-900 pre,
+.bg-gray-900 code {
+  color: #f3f4f6 !important;
+}
+
+/* Asegurar contraste en elementos de formulario */
+input,
+textarea,
+select {
+  color: #000000 !important;
+}
+
+/* Textos en tablas */
+th {
+  color: #000000 !important;
+  font-weight: bold !important;
+}
+
+td {
+  color: #111111 !important;
+}
+
+/* Listas */
+li {
+  color: #111111 !important;
+}
+
+/* Excepciones para mantener algunos colores específicos */
+.text-white {
+  color: #ffffff !important;
+}
+
+.text-blue-600,
+.text-blue-700,
+.text-blue-800 {
+  color: inherit !important;
+}
+
+.text-green-600,
+.text-green-700,
+.text-green-800 {
+  color: inherit !important;
+}
+
+.text-red-600,
+.text-red-700,
+.text-red-800 {
+  color: inherit !important;
+}
+
+.text-yellow-600,
+.text-yellow-700,
+.text-yellow-800 {
+  color: inherit !important;
+}
+
+/* Mantener colores en elementos con clases específicas de color */
+[class*="text-gray-"] {
+  color: inherit !important;
+}
+
+/* Asegurar que el texto en bloques de código sea visible */
+pre.font-mono {
+  color: #000000 !important;
+}
+
+/* Código Python específico */
+code.language-python {
+  color: #000000 !important;
+}
+
+/* Force white text in code blocks with dark background */
+.bg-gray-900 pre {
+  color: white !important;
+}
+
+.bg-gray-900 code {
+  color: white !important;
+}
+
+.bg-gray-900 pre * {
+  color: white !important;
+}
+
+.bg-gray-900 code * {
+  color: white !important;
+}
+
+/* Python syntax highlighting for dark theme - CSS approach */
+.python-code {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
+}
+
+/* Apply syntax highlighting with CSS selectors */
+.python-code .token.keyword {
+  color: #569cd6;
+}
+
+.python-code .token.string {
+  color: #ce9178;
+}
+
+.python-code .token.comment {
+  color: #6a9955;
+}
+
+.python-code .token.function {
+  color: #dcdcaa;
+}
+
+.python-code .token.number {
+  color: #b5cea8;
+}
+
+.python-code .token.builtin {
+  color: #4fc1ff;
+}
+
+.python-code .token.decorator {
+  color: #4ec9b0;
+}
+
+/* Simple approach: just make sure code is readable */
+.code-block {
+  background-color: #1e1e1e !important;
+  color: #d4d4d4 !important;
+  padding: 1rem !important;
+  border-radius: 0.5rem !important;
+  overflow-x: auto !important;
+  font-family: "Consolas", "Monaco", "Courier New", monospace !important;
+}
+
+.code-block * {
+  color: #d4d4d4 !important;
+}
