@@ -7,404 +7,230 @@ export default function ArchitectureDiagram() {
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">
           Arquitectura Cognitiva - Chatbot &quot;VuelaConNosotros&quot;
         </h2>
-        <p className="text-gray-600">
-          Diagrama de flujo con componentes principales y sus interacciones
+        <p className="text-gray-600 mb-6">
+          Diagrama de flujo completo con componentes principales y sus
+          interacciones
         </p>
       </div>
 
-      {/* Diagrama Principal con Flechas */}
-      <div className="bg-white p-8 rounded-lg border shadow-lg">
-        <div className="relative">
-          {/* Fila 1: Canales de Entrada */}
-          <div className="flex justify-center mb-8">
-            <div className="grid grid-cols-4 gap-4">
-              {[
-                { name: "Web Chat", icon: "💬" },
-                { name: "WhatsApp", icon: "📱" },
-                { name: "Teléfono", icon: "☎️" },
-                { name: "App Móvil", icon: "📲" },
-              ].map((channel, index) => (
-                <div key={index} className="flex flex-col items-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center text-2xl border-2 border-blue-300">
-                    {channel.icon}
-                  </div>
-                  <span className="text-xs mt-1 text-gray-600">
-                    {channel.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* Diagrama Mermaid */}
+      <div className="bg-white p-6 rounded-lg border shadow-lg">
+        <div className="mermaid-container" style={{ textAlign: "center" }}>
+          <div
+            className="mermaid"
+            dangerouslySetInnerHTML={{
+              __html: `
+                <svg viewBox="0 0 1200 1000" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Canales de Entrada -->
+                  <g id="input-channels">
+                    <rect x="50" y="50" width="120" height="60" rx="10" fill="#e1f5fe" stroke="#0277bd" stroke-width="2"/>
+                    <text x="110" y="85" text-anchor="middle" font-size="12" font-weight="bold">💬 Web Chat</text>
+                    
+                    <rect x="200" y="50" width="120" height="60" rx="10" fill="#e1f5fe" stroke="#0277bd" stroke-width="2"/>
+                    <text x="260" y="85" text-anchor="middle" font-size="12" font-weight="bold">📱 WhatsApp</text>
+                    
+                    <rect x="350" y="50" width="120" height="60" rx="10" fill="#e1f5fe" stroke="#0277bd" stroke-width="2"/>
+                    <text x="410" y="85" text-anchor="middle" font-size="12" font-weight="bold">☎️ Teléfono</text>
+                    
+                    <rect x="500" y="50" width="120" height="60" rx="10" fill="#e1f5fe" stroke="#0277bd" stroke-width="2"/>
+                    <text x="560" y="85" text-anchor="middle" font-size="12" font-weight="bold">📲 App Móvil</text>
+                  </g>
 
-          {/* Flechas hacia abajo */}
-          <div className="flex justify-center mb-4">
-            <div className="flex flex-col items-center">
-              <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-blue-500"></div>
-              <div className="w-1 h-6 bg-blue-500"></div>
-            </div>
-          </div>
+                  <!-- Flechas hacia abajo -->
+                  <g id="arrows-down-1">
+                    <path d="M 110 110 L 285 150" stroke="#0277bd" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    <path d="M 260 110 L 285 150" stroke="#0277bd" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    <path d="M 410 110 L 385 150" stroke="#0277bd" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    <path d="M 560 110 L 385 150" stroke="#0277bd" stroke-width="2" marker-end="url(#arrowhead)"/>
+                  </g>
 
-          {/* Fila 2: Capa de Procesamiento de Entrada */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-gradient-to-r from-green-100 to-green-200 p-6 rounded-lg border-2 border-green-400 min-w-[300px]">
-              <h3 className="text-center font-bold text-green-800 mb-4">
-                🔍 Procesamiento de Entrada
-              </h3>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-white p-2 rounded text-center">
-                  Normalización
-                </div>
-                <div className="bg-white p-2 rounded text-center">
-                  Autenticación
-                </div>
-                <div className="bg-white p-2 rounded text-center">
-                  Detección Idioma
-                </div>
-                <div className="bg-white p-2 rounded text-center">
-                  Análisis Sentimiento
-                </div>
-              </div>
-            </div>
-          </div>
+                  <!-- Procesamiento de Entrada -->
+                  <g id="processing">
+                    <rect x="200" y="150" width="200" height="80" rx="10" fill="#e8f5e8" stroke="#2e7d32" stroke-width="2"/>
+                    <text x="300" y="175" text-anchor="middle" font-size="14" font-weight="bold">🔍 Procesamiento de Entrada</text>
+                    <text x="300" y="195" text-anchor="middle" font-size="10">• Normalización • Autenticación</text>
+                    <text x="300" y="210" text-anchor="middle" font-size="10">• Detección Idioma • Análisis Sentimiento</text>
+                  </g>
 
-          {/* Flechas hacia abajo */}
-          <div className="flex justify-center mb-4">
-            <div className="flex flex-col items-center">
-              <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-green-500"></div>
-              <div className="w-1 h-6 bg-green-500"></div>
-            </div>
-          </div>
+                  <!-- Flecha hacia NLU -->
+                  <path d="M 300 230 L 300 280" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowhead)"/>
 
-          {/* Fila 3: Motor NLU */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-gradient-to-r from-purple-100 to-purple-200 p-6 rounded-lg border-2 border-purple-400 min-w-[350px]">
-              <h3 className="text-center font-bold text-purple-800 mb-4">
-                🧠 Motor NLU (Comprensión)
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white p-3 rounded-lg text-center">
-                  <div className="font-semibold text-purple-700">
-                    Intenciones
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    Cambiar vuelo, Consultar equipaje
-                  </div>
-                </div>
-                <div className="bg-white p-3 rounded-lg text-center">
-                  <div className="font-semibold text-purple-700">Entidades</div>
-                  <div className="text-xs text-gray-600">
-                    Fechas, destinos, nombres
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                  <!-- Motor NLU -->
+                  <g id="nlu">
+                    <rect x="200" y="280" width="200" height="80" rx="10" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2"/>
+                    <text x="300" y="305" text-anchor="middle" font-size="14" font-weight="bold">🧠 Motor NLU</text>
+                    <text x="300" y="325" text-anchor="middle" font-size="11">Intenciones: Cambiar vuelo, Equipaje</text>
+                    <text x="300" y="340" text-anchor="middle" font-size="11">Entidades: Fechas, destinos, nombres</text>
+                  </g>
 
-          {/* Flechas bidireccionales hacia los lados */}
-          <div className="flex justify-between items-center mb-8">
-            {/* Flecha izquierda hacia Gestor de Diálogo */}
-            <div className="flex items-center">
-              <div className="w-0 h-0 border-t-[12px] border-b-[12px] border-r-[20px] border-t-transparent border-b-transparent border-r-orange-500"></div>
-              <div className="w-6 h-1 bg-orange-500"></div>
-              <div className="bg-gradient-to-r from-orange-100 to-orange-200 p-4 rounded-lg border-2 border-orange-400 min-w-[200px]">
-                <h4 className="font-bold text-orange-800 text-center mb-2">
-                  💬 Gestor de Diálogo
-                </h4>
-                <div className="text-xs text-gray-600 text-center">
-                  <div>• Estado conversacional</div>
-                  <div>• Contexto multi-turno</div>
-                  <div>• Resolución ambigüedad</div>
-                </div>
-              </div>
-            </div>
+                  <!-- Gestor de Diálogo (izquierda) -->
+                  <g id="dialog">
+                    <rect x="30" y="300" width="150" height="80" rx="10" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
+                    <text x="105" y="325" text-anchor="middle" font-size="12" font-weight="bold">💬 Gestor Diálogo</text>
+                    <text x="105" y="340" text-anchor="middle" font-size="9">• Estado conversacional</text>
+                    <text x="105" y="355" text-anchor="middle" font-size="9">• Contexto multi-turno</text>
+                  </g>
 
-            {/* Flecha derecha hacia Sistemas Backend */}
-            <div className="flex items-center">
-              <div className="bg-gradient-to-r from-red-100 to-red-200 p-4 rounded-lg border-2 border-red-400 min-w-[200px]">
-                <h4 className="font-bold text-red-800 text-center mb-2">
-                  🔌 Sistemas Backend
-                </h4>
-                <div className="text-xs text-gray-600 text-center">
-                  <div>• GDS (Amadeus/Sabre)</div>
-                  <div>• Estado de vuelos</div>
-                  <div>• Inventario asientos</div>
-                </div>
-              </div>
-              <div className="w-6 h-1 bg-red-500"></div>
-              <div className="w-0 h-0 border-t-[12px] border-b-[12px] border-l-[20px] border-t-transparent border-b-transparent border-l-red-500"></div>
-            </div>
-          </div>
+                  <!-- Sistemas Backend (derecha) -->
+                  <g id="backend">
+                    <rect x="420" y="300" width="150" height="80" rx="10" fill="#ffebee" stroke="#d32f2f" stroke-width="2"/>
+                    <text x="495" y="325" text-anchor="middle" font-size="12" font-weight="bold">🔌 Sistemas Backend</text>
+                    <text x="495" y="340" text-anchor="middle" font-size="9">• GDS (Amadeus/Sabre)</text>
+                    <text x="495" y="355" text-anchor="middle" font-size="9">• Estado vuelos • Equipaje</text>
+                  </g>
 
-          {/* Flechas hacia abajo desde ambos lados */}
-          <div className="flex justify-center mb-4">
-            <div className="flex flex-col items-center">
-              <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-indigo-500"></div>
-              <div className="w-1 h-6 bg-indigo-500"></div>
-            </div>
-          </div>
+                  <!-- Flechas bidireccionales -->
+                  <path d="M 180 340 L 200 340" stroke="#f57c00" stroke-width="2" marker-end="url(#arrowhead)"/>
+                  <path d="M 200 325 L 180 325" stroke="#7b1fa2" stroke-width="2" marker-end="url(#arrowhead)"/>
+                  
+                  <path d="M 400 340 L 420 340" stroke="#7b1fa2" stroke-width="2" marker-end="url(#arrowhead)"/>
+                  <path d="M 420 325 L 400 325" stroke="#d32f2f" stroke-width="2" marker-end="url(#arrowhead)"/>
 
-          {/* Fila 4: Motor de Decisiones */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-gradient-to-r from-indigo-100 to-indigo-200 p-6 rounded-lg border-2 border-indigo-400 min-w-[400px]">
-              <h3 className="text-center font-bold text-indigo-800 mb-4">
-                ⚙️ Motor de Decisiones
-              </h3>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-white p-3 rounded-lg text-center">
-                  <div className="font-semibold text-indigo-700">Políticas</div>
-                  <div className="text-xs text-gray-600">
-                    Cambios, cancelaciones
-                  </div>
-                </div>
-                <div className="bg-white p-3 rounded-lg text-center">
-                  <div className="font-semibold text-indigo-700">
-                    Autorización
-                  </div>
-                  <div className="text-xs text-gray-600">Límites, permisos</div>
-                </div>
-                <div className="bg-white p-3 rounded-lg text-center">
-                  <div className="font-semibold text-indigo-700">
-                    Escalamiento
-                  </div>
-                  <div className="text-xs text-gray-600">A agente humano</div>
-                </div>
-              </div>
-            </div>
-          </div>
+                  <!-- Flecha hacia Motor de Decisiones -->
+                  <path d="M 300 360 L 300 420" stroke="#7b1fa2" stroke-width="2" marker-end="url(#arrowhead)"/>
 
-          {/* Flechas hacia abajo */}
-          <div className="flex justify-center mb-4">
-            <div className="flex flex-col items-center">
-              <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-pink-500"></div>
-              <div className="w-1 h-6 bg-pink-500"></div>
-            </div>
-          </div>
+                  <!-- Motor de Decisiones -->
+                  <g id="decisions">
+                    <rect x="200" y="420" width="200" height="80" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+                    <text x="300" y="445" text-anchor="middle" font-size="14" font-weight="bold">⚙️ Motor de Decisiones</text>
+                    <text x="300" y="465" text-anchor="middle" font-size="10">• Políticas • Autorización • Escalamiento</text>
+                    <text x="300" y="480" text-anchor="middle" font-size="10">• Reglas de Negocio</text>
+                  </g>
 
-          {/* Fila 5: Generador de Respuestas */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-gradient-to-r from-pink-100 to-pink-200 p-6 rounded-lg border-2 border-pink-400 min-w-[350px]">
-              <h3 className="text-center font-bold text-pink-800 mb-4">
-                📝 Generador de Respuestas (NLG)
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white p-3 rounded-lg text-center">
-                  <div className="font-semibold text-pink-700">
-                    Personalización
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    Tono, contexto usuario
-                  </div>
-                </div>
-                <div className="bg-white p-3 rounded-lg text-center">
-                  <div className="font-semibold text-pink-700">
-                    Estructuración
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    Formato, sugerencias
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                  <!-- Flecha hacia Generador NLG -->
+                  <path d="M 300 500 L 300 560" stroke="#1565c0" stroke-width="2" marker-end="url(#arrowhead)"/>
 
-          {/* Flechas hacia abajo */}
-          <div className="flex justify-center mb-4">
-            <div className="flex flex-col items-center">
-              <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-gray-500"></div>
-              <div className="w-1 h-6 bg-gray-500"></div>
-            </div>
-          </div>
+                  <!-- Generador NLG -->
+                  <g id="nlg">
+                    <rect x="200" y="560" width="200" height="80" rx="10" fill="#fce4ec" stroke="#c2185b" stroke-width="2"/>
+                    <text x="300" y="585" text-anchor="middle" font-size="14" font-weight="bold">📝 Generador NLG</text>
+                    <text x="300" y="605" text-anchor="middle" font-size="10">• Respuestas Personalizadas</text>
+                    <text x="300" y="620" text-anchor="middle" font-size="10">• Adaptación Tono • Estructura</text>
+                  </g>
 
-          {/* Fila 6: Salida al Usuario */}
-          <div className="flex justify-center">
-            <div className="bg-gradient-to-r from-gray-100 to-gray-200 p-6 rounded-lg border-2 border-gray-400 min-w-[300px]">
-              <h3 className="text-center font-bold text-gray-800 mb-4">
-                📤 Respuesta al Usuario
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white p-3 rounded-lg text-center">
-                  <div className="font-semibold text-gray-700">Información</div>
-                  <div className="text-xs text-gray-600">Datos solicitados</div>
-                </div>
-                <div className="bg-white p-3 rounded-lg text-center">
-                  <div className="font-semibold text-gray-700">Acciones</div>
-                  <div className="text-xs text-gray-600">
-                    Confirmación, pasos
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                  <!-- Flecha hacia Respuesta Usuario -->
+                  <path d="M 300 640 L 300 700" stroke="#c2185b" stroke-width="2" marker-end="url(#arrowhead)"/>
 
-          {/* Flecha de retroalimentación (curva) */}
-          <div className="absolute right-0 top-1/2 transform translate-x-8">
-            <div className="flex flex-col items-center">
-              <div className="text-xs text-gray-600 mb-2 whitespace-nowrap">
-                Retroalimentación
-              </div>
-              <div className="w-1 h-32 bg-gray-400"></div>
-              <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[12px] border-l-transparent border-r-transparent border-b-gray-400"></div>
-            </div>
-          </div>
+                  <!-- Respuesta Usuario -->
+                  <g id="response">
+                    <rect x="200" y="700" width="200" height="60" rx="10" fill="#f5f5f5" stroke="#424242" stroke-width="2"/>
+                    <text x="300" y="725" text-anchor="middle" font-size="14" font-weight="bold">📤 Respuesta al Usuario</text>
+                    <text x="300" y="745" text-anchor="middle" font-size="10">Información + Acciones + Pasos</text>
+                  </g>
+
+                  <!-- Retroalimentación -->
+                  <path d="M 400 730 Q 600 730 600 340 Q 600 300 570 340" stroke="#666" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)" fill="none"/>
+                  <text x="620" y="500" font-size="10" fill="#666">Retroalimentación</text>
+
+                  <!-- Flujos de Intenciones -->
+                  <g id="intent-flows">
+                    <!-- Cambiar Vuelo -->
+                    <rect x="650" y="100" width="180" height="120" rx="10" fill="#fff8e1" stroke="#ff8f00" stroke-width="2"/>
+                    <text x="740" y="125" text-anchor="middle" font-size="12" font-weight="bold">✈️ Flujo: Cambiar Vuelo</text>
+                    <text x="740" y="145" text-anchor="middle" font-size="9">1. Usuario: "Cambiar vuelo"</text>
+                    <text x="740" y="160" text-anchor="middle" font-size="9">2. NLU: Detecta intención</text>
+                    <text x="740" y="175" text-anchor="middle" font-size="9">3. Sistema: Consulta GDS</text>
+                    <text x="740" y="190" text-anchor="middle" font-size="9">4. Motor: Aplica políticas</text>
+                    <text x="740" y="205" text-anchor="middle" font-size="9">5. Respuesta: Opciones</text>
+
+                    <!-- Consultar Equipaje -->
+                    <rect x="650" y="250" width="180" height="120" rx="10" fill="#e8f5e8" stroke="#4caf50" stroke-width="2"/>
+                    <text x="740" y="275" text-anchor="middle" font-size="12" font-weight="bold">🧳 Flujo: Equipaje</text>
+                    <text x="740" y="295" text-anchor="middle" font-size="9">1. Usuario: "¿Qué equipaje?"</text>
+                    <text x="740" y="310" text-anchor="middle" font-size="9">2. NLU: Identifica consulta</text>
+                    <text x="740" y="325" text-anchor="middle" font-size="9">3. Base: Conocimiento</text>
+                    <text x="740" y="340" text-anchor="middle" font-size="9">4. Motor: Personaliza</text>
+                    <text x="740" y="355" text-anchor="middle" font-size="9">5. Respuesta: Info boleto</text>
+                  </g>
+
+                  <!-- Escalabilidad -->
+                  <g id="scalability">
+                    <rect x="850" y="100" width="200" height="270" rx="10" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
+                    <text x="950" y="125" text-anchor="middle" font-size="14" font-weight="bold">🚀 Escalabilidad</text>
+                    
+                    <text x="950" y="155" text-anchor="middle" font-size="12" font-weight="bold">📈 Arquitectura</text>
+                    <text x="950" y="175" text-anchor="middle" font-size="9">• Microservicios</text>
+                    <text x="950" y="190" text-anchor="middle" font-size="9">• Load Balancing</text>
+                    <text x="950" y="205" text-anchor="middle" font-size="9">• Cache Distribuido</text>
+                    
+                    <text x="950" y="235" text-anchor="middle" font-size="12" font-weight="bold">🧠 Evolución</text>
+                    <text x="950" y="255" text-anchor="middle" font-size="9">• Aprendizaje continuo</text>
+                    <text x="950" y="270" text-anchor="middle" font-size="9">• A/B Testing</text>
+                    <text x="950" y="285" text-anchor="middle" font-size="9">• Mejora automática</text>
+                    
+                    <text x="950" y="315" text-anchor="middle" font-size="12" font-weight="bold">🔧 Funcionalidades</text>
+                    <text x="950" y="335" text-anchor="middle" font-size="9">• Plug-in intenciones</text>
+                    <text x="950" y="350" text-anchor="middle" font-size="9">• Conectores sistemas</text>
+                  </g>
+
+                  <!-- Definición de puntas de flecha -->
+                  <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                      <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+                    </marker>
+                  </defs>
+                </svg>
+              `,
+            }}
+          />
         </div>
       </div>
 
-      {/* Flujos de Intenciones Críticas */}
-      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-lg border">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 text-center">
-          🔄 Flujos de Intenciones Críticas
-        </h3>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Flujo: Cambiar Vuelo */}
-          <div className="bg-white p-6 rounded-lg border">
-            <h4 className="font-bold text-orange-700 mb-4 flex items-center">
-              <span className="mr-2">✈️</span>
-              Flujo: Cambiar Vuelo
-            </h4>
-            <div className="space-y-3">
-              {[
-                {
-                  step: "1",
-                  text: "Usuario: 'Necesito cambiar mi vuelo'",
-                  color: "blue",
-                },
-                {
-                  step: "2",
-                  text: "NLU: Detecta intención + extrae datos",
-                  color: "green",
-                },
-                {
-                  step: "3",
-                  text: "Sistema: Consulta GDS disponibilidad",
-                  color: "purple",
-                },
-                {
-                  step: "4",
-                  text: "Motor: Aplica políticas de cambio",
-                  color: "red",
-                },
-                {
-                  step: "5",
-                  text: "NLG: Genera opciones personalizadas",
-                  color: "orange",
-                },
-                {
-                  step: "6",
-                  text: "Respuesta: 'Opciones disponibles...'",
-                  color: "gray",
-                },
-              ].map((item, index) => (
-                <div key={index} className="flex items-center space-x-3">
-                  <div
-                    className={`w-6 h-6 bg-${item.color}-500 text-white rounded-full flex items-center justify-center text-xs font-bold`}
-                  >
-                    {item.step}
-                  </div>
-                  <span className="text-sm text-gray-700">{item.text}</span>
-                  {index < 5 && (
-                    <div className="w-0 h-4 border-l border-gray-300 ml-3"></div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Flujo: Consultar Equipaje */}
-          <div className="bg-white p-6 rounded-lg border">
-            <h4 className="font-bold text-orange-700 mb-4 flex items-center">
-              <span className="mr-2">🧳</span>
-              Flujo: Consultar Equipaje
-            </h4>
-            <div className="space-y-3">
-              {[
-                {
-                  step: "1",
-                  text: "Usuario: '¿Qué equipaje puedo llevar?'",
-                  color: "blue",
-                },
-                {
-                  step: "2",
-                  text: "NLU: Identifica consulta + tipo boleto",
-                  color: "green",
-                },
-                {
-                  step: "3",
-                  text: "Sistema: Accede a base conocimiento",
-                  color: "purple",
-                },
-                {
-                  step: "4",
-                  text: "Motor: Personaliza según destino",
-                  color: "red",
-                },
-                {
-                  step: "5",
-                  text: "NLG: Estructura respuesta completa",
-                  color: "orange",
-                },
-                {
-                  step: "6",
-                  text: "Respuesta: 'Según tu boleto...'",
-                  color: "gray",
-                },
-              ].map((item, index) => (
-                <div key={index} className="flex items-center space-x-3">
-                  <div
-                    className={`w-6 h-6 bg-${item.color}-500 text-white rounded-full flex items-center justify-center text-xs font-bold`}
-                  >
-                    {item.step}
-                  </div>
-                  <span className="text-sm text-gray-700">{item.text}</span>
-                  {index < 5 && (
-                    <div className="w-0 h-4 border-l border-gray-300 ml-3"></div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* Descripción de Componentes */}
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="font-semibold text-gray-800 mb-4">
+            🔄 Flujo Principal
+          </h3>
+          <ol className="text-sm text-gray-600 space-y-1">
+            <li>1. Entrada por múltiples canales</li>
+            <li>2. Procesamiento y normalización</li>
+            <li>3. Comprensión NLU (intenciones/entidades)</li>
+            <li>4. Gestión de diálogo y consulta sistemas</li>
+            <li>5. Aplicación de políticas y decisiones</li>
+            <li>6. Generación de respuesta personalizada</li>
+          </ol>
         </div>
-      </div>
 
-      {/* Estrategia de Escalabilidad */}
-      <div className="bg-gradient-to-r from-cyan-50 to-blue-50 p-6 rounded-lg border">
-        <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
-          🚀 Estrategia de Escalabilidad y Evolución
-        </h3>
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-white p-4 rounded-lg border">
-            <h4 className="font-semibold text-cyan-700 mb-2">
-              📈 Escalabilidad
-            </h4>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Microservicios independientes</li>
-              <li>• Load balancing inteligente</li>
-              <li>• Cache distribuido</li>
-              <li>• APIs RESTful modulares</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg border">
-            <h4 className="font-semibold text-cyan-700 mb-2">
-              🧠 Evolución Continua
-            </h4>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Aprendizaje de interacciones</li>
-              <li>• A/B testing de respuestas</li>
-              <li>• Mejora automática NLU</li>
-              <li>• Análisis de sentiment trends</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg border">
-            <h4 className="font-semibold text-cyan-700 mb-2">
-              🔧 Nuevas Funcionalidades
-            </h4>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Plug-in de intenciones</li>
-              <li>• Conectores de sistemas</li>
-              <li>• Templates personalizables</li>
-              <li>• Multi-idioma dinámico</li>
-            </ul>
-          </div>
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="font-semibold text-gray-800 mb-4">
+            🔗 Conexiones Críticas
+          </h3>
+          <ul className="text-sm text-gray-600 space-y-1">
+            <li>
+              • <strong>NLU ↔ Gestor Diálogo:</strong> Contexto conversacional
+            </li>
+            <li>
+              • <strong>NLU ↔ Sistemas Backend:</strong> Validación datos
+            </li>
+            <li>
+              • <strong>Backend → Decisiones:</strong> Información en tiempo
+              real
+            </li>
+            <li>
+              • <strong>Respuesta → NLU:</strong> Retroalimentación aprendizaje
+            </li>
+          </ul>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="font-semibold text-gray-800 mb-4">
+            ⚡ Características Clave
+          </h3>
+          <ul className="text-sm text-gray-600 space-y-1">
+            <li>
+              • <strong>Escalable:</strong> Arquitectura microservicios
+            </li>
+            <li>
+              • <strong>Inteligente:</strong> Aprendizaje continuo
+            </li>
+            <li>
+              • <strong>Integrado:</strong> Conexión sistemas existentes
+            </li>
+            <li>
+              • <strong>Flexible:</strong> Nuevas intenciones fácil adición
+            </li>
+          </ul>
         </div>
       </div>
     </div>
