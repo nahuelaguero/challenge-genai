@@ -10,6 +10,32 @@ interface Metrics {
   length_score: number;
   empathy_score: number;
   overall_score: number;
+  // Nuevos campos para detalles
+  structure_details: {
+    found: string[];
+    missing: string[];
+    total_expected: number;
+  };
+  keyword_details: {
+    found: string[];
+    missing: string[];
+    total_expected: number;
+  };
+  clarification_details: {
+    needs_clarification: boolean;
+    asks_for_clarification: boolean;
+    clarification_phrases: string[];
+  };
+  length_details: {
+    character_count: number;
+    word_count: number;
+    optimal_range: string;
+    actual_category: string;
+  };
+  empathy_details: {
+    found_indicators: string[];
+    empathy_phrases: string[];
+  };
 }
 
 interface EvaluationCase {
@@ -18,6 +44,8 @@ interface EvaluationCase {
   liveResponse?: string;
   simulatedMetrics?: Metrics;
   liveMetrics?: Metrics;
+  responseTime?: number; // Nuevo campo para el tiempo de respuesta
+  timestamp?: string; // Nuevo campo para el timestamp
 }
 
 interface ExpectedData {
@@ -88,12 +116,12 @@ Mientras tanto, puedes intentar pagar con nuestra app móvil usando QR.`,
 📋 **Detalles:**
 • Requisitos básicos:
   - Ser mayor de 18 años
-  - Ingresos mínimos de $800.000
-  - Documento de identidad vigente
+  - Ingresos mínimos de ₲4,000,000
+  - Cédula de identidad paraguaya vigente
   - Historial crediticio (no indispensable)
 
 • Documentos necesarios:
-  - Cédula de ciudadanía
+  - Cédula de identidad paraguaya
   - Certificado laboral o de ingresos
   - Extractos bancarios últimos 3 meses
 
@@ -125,12 +153,12 @@ Mientras tanto, puedes intentar pagar con nuestra app móvil usando QR.`,
 
 📋 **Detalles:** 
 • Tipos de préstamos disponibles:
-  - Libre inversión: desde $1M hasta $50M
+  - Libre inversión: desde ₲2,500,000 hasta ₲500,000,000
   - Educativo: condiciones especiales
   - Vivienda: hasta 70% del valor
   
 • Plazos: desde 6 hasta 60 meses
-• Tasas: desde 1.2% mensual
+• Tasas: desde 2.2% mensual
 • Aprobación: 24 horas
 
 Para darte información más específica, necesito saber:
@@ -159,16 +187,16 @@ Para darte información más específica, necesito saber:
 
 📋 **Detalles:**
 **Tarjeta de Débito:**
-• Cuota de manejo: $0 (¡Gratis!)
-• Retiros en cajeros propios: $0
-• Retiros en otros cajeros: $4,500
-• Transferencias: $0
-• Compras: $0
+• Cuota de manejo: ₲0 (¡Gratis!)
+• Retiros en cajeros propios: ₲0
+• Retiros en otros cajeros: ₲15,000
+• Transferencias: ₲0
+• Compras: ₲0
 
 **Tarjeta de Crédito:**
-• Cuota de manejo: $15,000/mes (primer año gratis)
+• Cuota de manejo: ₲125,000/mes (primer año gratis)
 • Avances: 3% del monto
-• Compras: $0
+• Compras: ₲0
 • Pagos diferidos: según el plazo
 
 ¿De cuál tarjeta específicamente necesitas información?
@@ -442,11 +470,14 @@ App > Préstamos > Simular
 export default function NotebookViewer() {
   const [activeTab, setActiveTab] = useState("ejercicio1");
   const [showDataset, setShowDataset] = useState(false);
-  const [selectedCase, setSelectedCase] = useState<number | null>(null);
+  const [selectedCases, setSelectedCases] = useState<number[]>([]); // Cambiado de selectedCase a selectedCases (array)
   const [evaluationCases, setEvaluationCases] = useState<{
     [key: number]: EvaluationCase;
   }>({});
   const [isLoading, setIsLoading] = useState<{ [key: number]: boolean }>({});
+  const [expandedMetrics, setExpandedMetrics] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   // Importar la función de evaluación
   const evaluateResponse = (
@@ -460,10 +491,28 @@ export default function NotebookViewer() {
       length_score: 0,
       empathy_score: 0,
       overall_score: 0,
+      // Inicializar nuevos campos
+      structure_details: { found: [], missing: [], total_expected: 0 },
+      keyword_details: { found: [], missing: [], total_expected: 0 },
+      clarification_details: {
+        needs_clarification: false,
+        asks_for_clarification: false,
+        clarification_phrases: [],
+      },
+      length_details: {
+        character_count: 0,
+        word_count: 0,
+        optimal_range: "",
+        actual_category: "",
+      },
+      empathy_details: { found_indicators: [], empathy_phrases: [] },
     };
 
     // 1. Verificar componentes estructurales
     let structureScore = 0;
+    const foundComponents: string[] = [];
+    const missingComponents: string[] = [];
+
     for (const component of expectedData.expectedComponents) {
       if (
         component === "analysis" &&
@@ -471,66 +520,115 @@ export default function NotebookViewer() {
         response.includes("Análisis:")
       ) {
         structureScore += 1;
+        foundComponents.push("🤔 Análisis");
       } else if (
         component === "response" &&
         response.includes("💡") &&
         response.includes("Respuesta:")
       ) {
         structureScore += 1;
+        foundComponents.push("💡 Respuesta");
       } else if (
         component === "details" &&
         response.includes("📋") &&
         response.includes("Detalles:")
       ) {
         structureScore += 1;
+        foundComponents.push("📋 Detalles");
       } else if (
         component === "next_step" &&
         response.includes("🔄") &&
         response.includes("Siguiente paso:")
       ) {
         structureScore += 1;
+        foundComponents.push("🔄 Siguiente paso");
+      } else {
+        missingComponents.push(component);
       }
     }
     results.structure_score =
       structureScore / expectedData.expectedComponents.length;
+    results.structure_details = {
+      found: foundComponents,
+      missing: missingComponents,
+      total_expected: expectedData.expectedComponents.length,
+    };
 
     // 2. Verificar presencia de palabras clave
     let keywordsFound = 0;
+    const foundKeywords: string[] = [];
+    const missingKeywords: string[] = [];
     const responseLower = response.toLowerCase();
+
     for (const keyword of expectedData.expectedKeywords) {
       if (responseLower.includes(keyword.toLowerCase())) {
         keywordsFound += 1;
+        foundKeywords.push(keyword);
+      } else {
+        missingKeywords.push(keyword);
       }
     }
     results.keyword_score =
       keywordsFound / expectedData.expectedKeywords.length;
+    results.keyword_details = {
+      found: foundKeywords,
+      missing: missingKeywords,
+      total_expected: expectedData.expectedKeywords.length,
+    };
 
     // 3. Verificar manejo de aclaración
     const needsClarification = expectedData.requiresClarification;
-    const asksForClarification = [
+    const clarificationPhrases = [
       "necesito",
       "podrías",
       "específico",
       "aclaración",
       "cuál",
       "qué",
-    ].some((phrase) => responseLower.includes(phrase));
+      "dime",
+      "indicar",
+      "proporcionar",
+    ];
 
+    const foundClarificationPhrases = clarificationPhrases.filter((phrase) =>
+      responseLower.includes(phrase)
+    );
+
+    const asksForClarification = foundClarificationPhrases.length > 0;
     results.clarification_score =
       needsClarification === asksForClarification ? 1.0 : 0.0;
+    results.clarification_details = {
+      needs_clarification: needsClarification,
+      asks_for_clarification: asksForClarification,
+      clarification_phrases: foundClarificationPhrases,
+    };
 
     // 4. Verificar longitud apropiada
     const length = response.length;
+    const wordCount = response.split(" ").length;
+    let lengthCategory = "";
+
     if (length >= 200 && length <= 800) {
       results.length_score = 1.0;
+      lengthCategory = "Óptima";
     } else if (
       (length >= 100 && length < 200) ||
       (length > 800 && length <= 1000)
     ) {
       results.length_score = 0.7;
+      lengthCategory =
+        length < 200 ? "Corta pero aceptable" : "Larga pero aceptable";
     } else {
       results.length_score = 0.3;
+      lengthCategory = length < 100 ? "Muy corta" : "Muy larga";
     }
+
+    results.length_details = {
+      character_count: length,
+      word_count: wordCount,
+      optimal_range: "200-800 caracteres",
+      actual_category: lengthCategory,
+    };
 
     // 5. Verificar tono empático
     const empathyIndicators = [
@@ -539,11 +637,21 @@ export default function NotebookViewer() {
       "ayudo",
       "lamento",
       "bienvenido",
+      "gracias",
+      "excelente",
+      "encantado",
     ];
-    const empathyScore = empathyIndicators.filter((indicator) =>
+
+    const foundEmpathyIndicators = empathyIndicators.filter((indicator) =>
       responseLower.includes(indicator)
-    ).length;
+    );
+
+    const empathyScore = foundEmpathyIndicators.length;
     results.empathy_score = Math.min(empathyScore / 2, 1.0);
+    results.empathy_details = {
+      found_indicators: foundEmpathyIndicators,
+      empathy_phrases: foundEmpathyIndicators,
+    };
 
     // 6. Score general
     results.overall_score =
@@ -568,6 +676,12 @@ export default function NotebookViewer() {
       const simulatedMetrics = evaluateResponse(simulatedResponse, caseData);
 
       // Sistema real - llamada a ChatGPT
+      console.log(`🚀 Iniciando llamada a ChatGPT para caso ${caseId}`);
+      console.log(`📝 Query: "${caseData.query}"`);
+      console.log(`⏱️ Timestamp: ${new Date().toISOString()}`);
+
+      const startTime = performance.now();
+
       const response = await fetch("/api/test-prompt", {
         method: "POST",
         headers: {
@@ -578,14 +692,53 @@ export default function NotebookViewer() {
         }),
       });
 
-      const data = await response.json();
+      const endTime = performance.now();
+      const responseTime = Math.round(endTime - startTime);
+
+      console.log(`⏱️ Tiempo de respuesta: ${responseTime}ms`);
+      console.log(`📊 Status: ${response.status}`);
+
+      // Verificar si la respuesta es válida antes de parsear JSON
+      if (!response.ok) {
+        let errorMessage = `Error del servidor: ${response.status}`;
+        try {
+          const errorText = await response.text();
+          console.error(`❌ Error del servidor: ${errorText}`);
+          errorMessage = errorText || errorMessage;
+        } catch (textError) {
+          console.error(`❌ Error al leer respuesta de error: ${textError}`);
+        }
+        alert(`Error: ${errorMessage}`);
+        return;
+      }
+
+      // Obtener el texto de la respuesta primero
+      const responseText = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error(`❌ Error al parsear JSON: ${jsonError}`);
+        console.error(`❌ Respuesta recibida: ${responseText}`);
+        alert(
+          `Error: Respuesta inválida del servidor. Revisa la consola para más detalles.`
+        );
+        return;
+      }
 
       if (data.error) {
+        console.error(`❌ Error de API: ${data.error}`);
         alert(`Error: ${data.error}`);
         return;
       }
 
+      console.log(`✅ Respuesta recibida (${data.response.length} caracteres)`);
+      console.log(`📝 Respuesta: "${data.response.substring(0, 100)}..."`);
+
       const liveMetrics = evaluateResponse(data.response, caseData);
+
+      console.log(`📊 Métricas calculadas:`, liveMetrics);
 
       setEvaluationCases((prev) => ({
         ...prev,
@@ -595,28 +748,68 @@ export default function NotebookViewer() {
           liveResponse: data.response,
           simulatedMetrics: simulatedMetrics,
           liveMetrics: liveMetrics,
+          responseTime: responseTime, // Agregamos el tiempo de respuesta
+          timestamp: new Date().toISOString(), // Agregamos timestamp
         },
       }));
     } catch (error) {
-      console.error("Error:", error);
-      alert("Error al conectar con el servicio");
+      console.error("❌ Error completo:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      alert(`Error al conectar con el servicio: ${errorMessage}`);
     } finally {
       setIsLoading((prev) => ({ ...prev, [caseId]: false }));
     }
+  };
+
+  // Función para manejar la expansión/contracción de métricas
+  const toggleMetricExpansion = (caseId: number, metric: string) => {
+    const key = `${caseId}-${metric}`;
+    setExpandedMetrics((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // Función para manejar la selección/deselección de casos
+  const toggleCaseSelection = (caseId: number) => {
+    setSelectedCases((prev) => {
+      const newSelected = prev.includes(caseId)
+        ? prev.filter((id) => id !== caseId)
+        : [...prev, caseId];
+
+      // Si se está abriendo un caso por primera vez, calcular métricas simuladas
+      if (
+        !prev.includes(caseId) &&
+        !evaluationCases[caseId]?.simulatedMetrics
+      ) {
+        const caseData = evaluationDataset.find((item) => item.id === caseId);
+        if (caseData) {
+          const simulatedMetrics = evaluateResponse(
+            caseData.response,
+            caseData
+          );
+          setEvaluationCases((prevCases) => ({
+            ...prevCases,
+            [caseId]: {
+              ...prevCases[caseId],
+              query: caseData.query,
+              response: caseData.response,
+              simulatedMetrics,
+            },
+          }));
+        }
+      }
+
+      return newSelected;
+    });
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-          <h1 className="text-4xl font-bold text-center mb-4">
-            Challenge itti 2025
-          </h1>
-          <p className="text-center text-gray-600">
-            Prompt Engineering y Arquitectura Cognitiva
-          </p>
-        </div>
+        {/* El header se ha eliminado porque ya está presente en page.tsx */}
 
         {/* Tabs */}
         <div className="flex space-x-4 mb-6">
@@ -648,7 +841,7 @@ export default function NotebookViewer() {
             {/* Objetivo */}
             <div className="bg-white rounded-lg shadow-lg p-8">
               <h2 className="text-2xl font-bold text-black mb-4">
-                1 - Prompt Engineering para Bot de Fintech
+                1 - Prompt Engineering para Bot de Fintech Paraguaya
               </h2>
 
               <div className="mb-6">
@@ -703,45 +896,85 @@ export default function NotebookViewer() {
                 Prompt Propuesto
               </h3>
               <div className="bg-gray-900 text-white p-6 rounded-lg overflow-x-auto">
-                <pre className="whitespace-pre-wrap font-mono text-sm">{`Eres un asesor financiero experto de una fintech llamada "FinTechPro". Tu objetivo es ayudar a los clientes con consultas sobre productos financieros específicos.
+                <pre className="whitespace-pre-wrap font-mono text-sm">{`Eres un asesor financiero experto de una fintech paraguaya llamada "FinTechPro". Tu objetivo es ayudar a los clientes con consultas sobre productos financieros específicos de manera empática, precisa y profesional.
 
-PRODUCTOS DISPONIBLES:
-1. Tarjeta de débito (sin costo anual)
-2. Tarjeta de crédito (cuota anual $2,500, límites $5,000-$200,000)
-3. Préstamos personales (desde $10,000 hasta $500,000, tasas desde 18% anual)
+PRODUCTOS DISPONIBLES CON INFORMACIÓN ESPECÍFICA:
+
+1. TARJETA DE DÉBITO:
+   • Cuota de manejo: ₲0 (sin costo anual)
+   • Retiros cajeros propios: ₲0
+   • Retiros cajeros ajenos: ₲15,000
+   • Transferencias: ₲0
+   • Compras nacionales e internacionales: ₲0
+   • Límite diario: ₲8,000,000
+
+2. TARJETA DE CRÉDITO:
+   • Cuota de manejo: ₲125,000/mes (primer año GRATIS)
+   • Límites disponibles: desde ₲2,500,000 hasta ₲50,000,000
+   • Requisitos mínimos: >18 años, ingresos >₲4,000,000/mes
+   • Avances en efectivo: 3% del monto (mín ₲25,000)
+   • Tasa de interés: 2.8% mensual (39.7% E.A.)
+   • Tiempo de aprobación: 24-48 horas
+
+3. PRÉSTAMOS PERSONALES:
+   • Montos: desde ₲2,500,000 hasta ₲500,000,000
+   • Tasas: desde 2.2% mensual (29.8% E.A.)
+   • Plazos: 6 a 84 meses
+   • Requisitos: ingresos >₲5,000,000, antigüedad laboral >6 meses
+   • Aprobación: 24-48 horas
+   • Tipos: libre inversión, educativo, compra de cartera
 
 ESTRUCTURA DE RESPUESTA OBLIGATORIA:
-🤔 **Análisis:** [Analiza la consulta del cliente]
-💡 **Respuesta:** [Responde directamente a la consulta]
-📋 **Detalles:** [Proporciona detalles específicos del producto]
-🔄 **Siguiente paso:** [Indica qué hacer a continuación]
+🤔 **Análisis:** [Analiza la consulta del cliente paso a paso]
+💡 **Respuesta:** [Responde directamente a la consulta con empatía]
+📋 **Detalles:** [Proporciona detalles específicos y datos concretos]
+🔄 **Siguiente paso:** [Indica acciones concretas a seguir]
 
-TÉCNICAS DE IN-CONTEXT LEARNING:
-1. **Few-shot learning:** Usa los ejemplos proporcionados como referencia
-2. **Chain-of-thought:** Muestra tu razonamiento paso a paso
-3. **Empathy:** Reconoce las emociones del cliente y responde apropiadamente
-4. **Clarification:** Si la consulta es ambigua, pide información específica
+TÉCNICAS DE PROMPT ENGINEERING APLICADAS:
 
-EJEMPLOS DE RESPUESTAS:
+1. **Chain-of-Thought:** Muestra tu razonamiento en la sección Análisis
+2. **Few-shot Learning:** Usa los ejemplos como referencia de formato y contenido
+3. **Empathy First:** Reconoce emociones y responde con frases empáticas
+4. **Specific Information:** SIEMPRE incluye datos numéricos concretos cuando aplique
+5. **Clarification Handling:** Si la consulta es ambigua, pide información específica
 
-Ejemplo 1 - Consulta: "¿Cuál es el límite de mi tarjeta de crédito?"
-🤔 **Análisis:** El cliente pregunta sobre el límite de crédito. No tengo información específica de su cuenta, debo explicar los rangos generales.
-💡 **Respuesta:** Entiendo tu consulta sobre el límite de crédito. Los límites de nuestra tarjeta van desde $5,000 hasta $200,000, dependiendo de tu perfil crediticio.
-📋 **Detalles:** La evaluación incluye historial crediticio, ingresos y antigüedad laboral. Nuestra tarjeta tiene una cuota anual de $2,500 con diversos beneficios.
-🔄 **Siguiente paso:** Te recomiendo que revisemos tu perfil específico para conocer tu límite exacto. ¿Te gustaría que iniciemos ese proceso?
+EJEMPLOS MEJORADOS CON INFORMACIÓN ESPECÍFICA:
 
-Ejemplo 2 - Consulta: "Necesito un préstamo"
-🤔 **Análisis:** El cliente solicita un préstamo pero no especifica el monto ni el propósito. Necesito más información para brindar una respuesta precisa.
-💡 **Respuesta:** Me da gusto saber que estás interesado en nuestros préstamos personales. Ofrecemos préstamos desde $10,000 hasta $500,000.
-📋 **Detalles:** Nuestras tasas comienzan desde 18% anual, con plazos de hasta 60 meses. El proceso de aprobación toma entre 24-48 horas una vez completada la documentación.
-🔄 **Siguiente paso:** Para brindarte información más específica, necesito conocer el monto que requieres y el propósito del préstamo. ¿Podrías proporcionarme esos detalles?
+Ejemplo 1 - Consulta: "¿Cuáles son las comisiones de la tarjeta?"
+🤔 **Análisis:** El cliente pregunta sobre comisiones pero no especifica si es tarjeta de débito o crédito. Debo proporcionar información de ambas para ser proactivo.
+💡 **Respuesta:** Entiendo tu interés en conocer las comisiones de nuestras tarjetas. Te proporciono el detalle completo de ambas opciones.
+📋 **Detalles:** 
+**Tarjeta de Débito:** Cuota de manejo ₲0, retiros cajeros propios ₲0, retiros otros cajeros ₲15,000
+**Tarjeta de Crédito:** Cuota de manejo ₲125,000/mes (primer año GRATIS), avances 3% (mín ₲25,000), compras ₲0
+🔄 **Siguiente paso:** ¿Te interesa información específica sobre alguna tarjeta en particular o quieres conocer los beneficios adicionales de cada una?
 
-REGLAS IMPORTANTES:
-- Usa emojis para hacer las respuestas más amigables y visualmente atractivas
-- Usa un tono profesional pero cálido
-- Sé empático con frases como "entiendo tu situación", "lamento escuchar eso", "me da gusto ayudarte"
-- Si no tienes información específica, sé honesto al respecto
-- Prioriza la seguridad del cliente en casos de emergencia
+Ejemplo 2 - Consulta: "Mi tarjeta fue rechazada"
+🤔 **Análisis:** Rechazo de tarjeta puede tener múltiples causas. Debo ser empático y ofrecer soluciones inmediatas.
+💡 **Respuesta:** Lamento mucho este inconveniente. Entiendo lo frustrante que debe ser esta situación.
+📋 **Detalles:** Posibles causas: límite diario alcanzado (₲8,000,000), tarjeta bloqueada por seguridad, terminal con problemas, o verificación de transacción pendiente.
+🔄 **Siguiente paso:** Revisa si recibiste notificaciones en la app FinTechPro. Si persiste, comunícate al 0800-FINTECH para desbloqueo inmediato. Mientras tanto, puedes usar la app para pagos con QR en comercios de Asunción.
+
+PALABRAS EMPÁTICAS OBLIGATORIAS (usar al menos 2 por respuesta):
+• "entiendo" / "comprendo"
+• "lamento" / "siento"
+• "perfecto" / "excelente"
+• "me da gusto" / "encantado"
+• "gracias por" / "agradezco"
+
+INFORMACIÓN DE CONTACTO Y SOPORTE:
+• Línea de atención: 0800-FINTECH (24/7)
+• WhatsApp: +595 981 123 456
+• Horario oficinas: Lunes a viernes 8:00AM - 6:00PM
+• App móvil: "FinTechPro" (Android/iOS)
+• Oficinas: Asunción, Ciudad del Este, Encarnación
+
+REGLAS CRÍTICAS:
+1. SIEMPRE incluir datos numéricos específicos en guaraníes cuando sea relevante
+2. Ser proactivo: dar información completa sin esperar múltiples preguntas
+3. Manejar ambigüedad preguntando específicamente qué necesita el cliente
+4. En casos de seguridad (cargos no reconocidos, claves), escalar inmediatamente a soporte
+5. Ofrecer alternativas cuando el producto principal no aplique
+6. Mantener contexto cultural paraguayo en ejemplos y referencias
 
 Mantén siempre un tono profesional, empático y orientado a la solución.`}</pre>
               </div>
@@ -753,43 +986,208 @@ Mantén siempre un tono profesional, empático y orientado a la solución.`}</pr
                 Técnicas de Prompt Engineering
               </h3>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="border-l-4 border-blue-500 pl-4">
-                  <h4 className="font-bold text-black mb-2">
-                    Chain of Thought (CoT)
-                  </h4>
-                  <p className="text-gray-600 text-sm">
-                    El modelo muestra su proceso de razonamiento paso a paso
-                    antes de dar la respuesta final.
-                  </p>
-                </div>
+              {/* Técnicas Utilizadas */}
+              <div className="mb-8">
+                <h4 className="text-lg font-bold text-green-700 mb-4">
+                  ✅ Técnicas Utilizadas
+                </h4>
+                <div className="space-y-6">
+                  <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      1. Chain-of-Thought (CoT) Prompting
+                    </h5>
+                    <p className="text-gray-700 text-sm mb-3">
+                      <strong>Implementación:</strong> Sección obligatoria
+                      &quot;🤔 **Análisis:**&quot; donde el modelo debe mostrar
+                      su razonamiento paso a paso.
+                    </p>
+                    <div className="bg-white p-3 rounded border-l-4 border-blue-300 mb-3">
+                      <p className="text-xs font-mono text-gray-600">
+                        🤔 **Análisis:** El cliente pregunta sobre comisiones
+                        pero no especifica si es tarjeta de débito o crédito.
+                        Debo proporcionar información de ambas para ser
+                        proactivo y completo.
+                      </p>
+                    </div>
+                    <p className="text-gray-600 text-xs">
+                      <strong>Justificación:</strong> En atención al cliente
+                      financiero permite entender el razonamiento del asistente,
+                      genera confianza y transparencia.
+                    </p>
+                  </div>
 
-                <div className="border-l-4 border-green-500 pl-4">
-                  <h4 className="font-bold text-black mb-2">
-                    Few-Shot Learning
-                  </h4>
-                  <p className="text-gray-600 text-sm">
-                    Se proporcionan ejemplos específicos de consultas y
-                    respuestas para guiar el comportamiento.
-                  </p>
-                </div>
+                  <div className="border-l-4 border-green-500 pl-4 bg-green-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      2. Few-Shot Learning
+                    </h5>
+                    <p className="text-gray-700 text-sm mb-3">
+                      <strong>Implementación:</strong> Se proporcionan 2
+                      ejemplos específicos y detallados que entrenan al modelo
+                      sobre el formato esperado.
+                    </p>
+                    <div className="bg-white p-3 rounded border-l-4 border-green-300 mb-3">
+                      <p className="text-xs text-gray-600">
+                        • Ejemplo 1: Consulta ambigua sobre comisiones →
+                        Respuesta proactiva con ambas opciones
+                        <br />• Ejemplo 2: Problema técnico → Respuesta empática
+                        + soluciones múltiples
+                      </p>
+                    </div>
+                    <p className="text-gray-600 text-xs">
+                      <strong>Justificación:</strong> Los ejemplos demuestran el
+                      comportamiento deseado y reducen la variabilidad en las
+                      respuestas.
+                    </p>
+                  </div>
 
-                <div className="border-l-4 border-purple-500 pl-4">
-                  <h4 className="font-bold text-black mb-2">Role Prompting</h4>
-                  <p className="text-gray-600 text-sm">
-                    Define el rol como &quot;asesor financiero experto&quot;
-                    para mantener consistencia profesional.
-                  </p>
-                </div>
+                  <div className="border-l-4 border-purple-500 pl-4 bg-purple-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      3. Role Prompting
+                    </h5>
+                    <p className="text-gray-700 text-sm mb-3">
+                      <strong>Implementación:</strong> Define el rol específico
+                      como &quot;asesor financiero experto de una fintech
+                      paraguaya&quot;.
+                    </p>
+                    <div className="bg-white p-3 rounded border-l-4 border-purple-300 mb-3">
+                      <p className="text-xs font-mono text-gray-600">
+                        &quot;Eres un asesor financiero experto de una fintech
+                        paraguaya llamada &apos;FinTechPro&apos;&quot;
+                      </p>
+                    </div>
+                    <p className="text-gray-600 text-xs">
+                      <strong>Justificación:</strong> Establece contexto
+                      profesional, geográfico y cultural específico, manteniendo
+                      consistencia en el tono.
+                    </p>
+                  </div>
 
-                <div className="border-l-4 border-orange-500 pl-4">
-                  <h4 className="font-bold text-black mb-2">
-                    Structured Output
-                  </h4>
-                  <p className="text-gray-600 text-sm">
-                    Formato de respuesta obligatorio con 5 secciones para
-                    mantener claridad y consistencia.
-                  </p>
+                  <div className="border-l-4 border-orange-500 pl-4 bg-orange-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      4. Structured Output
+                    </h5>
+                    <p className="text-gray-700 text-sm mb-3">
+                      <strong>Implementación:</strong> Formato obligatorio de 4
+                      secciones con emojis identificadores.
+                    </p>
+                    <div className="bg-white p-3 rounded border-l-4 border-orange-300 mb-3">
+                      <p className="text-xs font-mono text-gray-600">
+                        🤔 **Análisis:** → 💡 **Respuesta:** → 📋 **Detalles:**
+                        → 🔄 **Siguiente paso:**
+                      </p>
+                    </div>
+                    <p className="text-gray-600 text-xs">
+                      <strong>Justificación:</strong> Garantiza respuestas
+                      organizadas, fáciles de procesar automáticamente y
+                      consistentes.
+                    </p>
+                  </div>
+
+                  <div className="border-l-4 border-pink-500 pl-4 bg-pink-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      5. Empathy-First Approach
+                    </h5>
+                    <p className="text-gray-700 text-sm mb-3">
+                      <strong>Implementación:</strong> Lista obligatoria de
+                      palabras empáticas que debe usar (mínimo 2 por respuesta).
+                    </p>
+                    <div className="bg-white p-3 rounded border-l-4 border-pink-300 mb-3">
+                      <p className="text-xs text-gray-600">
+                        &quot;entiendo&quot;, &quot;comprendo&quot;,
+                        &quot;lamento&quot;, &quot;siento&quot;,
+                        &quot;perfecto&quot;, &quot;excelente&quot;
+                      </p>
+                    </div>
+                    <p className="text-gray-600 text-xs">
+                      <strong>Justificación:</strong> En atención al cliente
+                      financiero, la empatía es crítica para manejar estrés y
+                      frustración.
+                    </p>
+                  </div>
+
+                  <div className="border-l-4 border-indigo-500 pl-4 bg-indigo-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      6. Information Grounding
+                    </h5>
+                    <p className="text-gray-700 text-sm mb-3">
+                      <strong>Implementación:</strong> Datos numéricos
+                      específicos y verificables en cada respuesta relevante.
+                    </p>
+                    <div className="bg-white p-3 rounded border-l-4 border-indigo-300 mb-3">
+                      <p className="text-xs font-mono text-gray-600">
+                        Cuota: ₲125,000/mes • Límites: ₲2,500,000-₲50,000,000 •
+                        Límite diario: ₲8,000,000
+                      </p>
+                    </div>
+                    <p className="text-gray-600 text-xs">
+                      <strong>Justificación:</strong> Evita respuestas genéricas
+                      y proporciona información accionable específica.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Técnicas NO Utilizadas */}
+              <div className="border-t pt-6">
+                <h4 className="text-lg font-bold text-red-700 mb-4">
+                  ❌ Técnicas NO Utilizadas y Justificación
+                </h4>
+                <div className="space-y-4">
+                  <div className="border-l-4 border-gray-400 pl-4 bg-gray-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      Zero-Shot Learning
+                    </h5>
+                    <p className="text-gray-600 text-sm">
+                      <strong>Por qué NO:</strong> Los casos de uso financiero
+                      requieren consistencia y precisión específica. Sin
+                      ejemplos, el modelo podría generar respuestas incorrectas
+                      o inconsistentes.
+                    </p>
+                  </div>
+
+                  <div className="border-l-4 border-gray-400 pl-4 bg-gray-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      Self-Consistency
+                    </h5>
+                    <p className="text-gray-600 text-sm">
+                      <strong>Por qué NO:</strong> En atención al cliente
+                      necesitamos una respuesta determinística y clara, no
+                      múltiples opciones que puedan confundir al cliente.
+                    </p>
+                  </div>
+
+                  <div className="border-l-4 border-gray-400 pl-4 bg-gray-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      Multi-Step Reasoning
+                    </h5>
+                    <p className="text-gray-600 text-sm">
+                      <strong>Por qué NO:</strong> Aunque útil para problemas
+                      complejos, puede resultar en respuestas demasiado largas y
+                      confusas para consultas simples de atención al cliente.
+                    </p>
+                  </div>
+
+                  <div className="border-l-4 border-gray-400 pl-4 bg-gray-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      Tree of Thoughts
+                    </h5>
+                    <p className="text-gray-600 text-sm">
+                      <strong>Por qué NO:</strong> Explorar múltiples ramas de
+                      razonamiento puede confundir al cliente. En atención al
+                      cliente necesitamos una respuesta clara y directa.
+                    </p>
+                  </div>
+
+                  <div className="border-l-4 border-gray-400 pl-4 bg-gray-50 p-4 rounded-r-lg">
+                    <h5 className="font-bold text-black mb-2">
+                      Constitutional AI
+                    </h5>
+                    <p className="text-gray-600 text-sm">
+                      <strong>Por qué NO:</strong> El contexto financiero ya
+                      tiene regulaciones específicas, y las reglas están
+                      implementadas directamente en el prompt.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -826,264 +1224,1562 @@ Mantén siempre un tono profesional, empático y orientado a la solución.`}</pr
 
               {showDataset && (
                 <div className="mt-6 space-y-4">
-                  {evaluationDataset.map((item) => (
-                    <div key={item.id} className="border rounded-lg">
-                      <button
-                        onClick={() =>
-                          setSelectedCase(
-                            selectedCase === item.id ? null : item.id
-                          )
-                        }
-                        className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="font-bold text-black">
-                              Caso {item.id}:
-                            </span>
-                            <span className="ml-2 text-gray-700">
-                              {item.query}
-                            </span>
-                          </div>
-                          <span className="text-lg">
-                            {selectedCase === item.id ? "−" : "+"}
-                          </span>
-                        </div>
-                      </button>
+                  {evaluationDataset.map((item) => {
+                    // Función para obtener el tipo de caso y su configuración
+                    const getCaseTypeConfig = (id: number) => {
+                      // Casos exitosos (score alto)
+                      if ([1, 2, 3, 4, 5, 6].includes(id)) {
+                        return {
+                          type: "Exitoso",
+                          badge: "bg-green-100 text-green-800",
+                          description:
+                            "Demuestra funcionamiento óptimo del sistema",
+                        };
+                      }
+                      // Casos problemáticos (score bajo)
+                      else if ([7, 8, 9].includes(id)) {
+                        return {
+                          type: "Problemático",
+                          badge: "bg-red-100 text-red-800",
+                          description: "Muestra limitaciones y áreas de mejora",
+                        };
+                      }
+                      // Caso límite
+                      else if (id === 10) {
+                        return {
+                          type: "Límite",
+                          badge: "bg-yellow-100 text-yellow-800",
+                          description:
+                            "Caso borderline que requiere análisis detallado",
+                        };
+                      }
+                      return {
+                        type: "Estándar",
+                        badge: "bg-gray-100 text-gray-800",
+                        description: "Caso de evaluación general",
+                      };
+                    };
 
-                      {selectedCase === item.id && (
-                        <div className="p-4 border-t bg-gray-50">
-                          <div className="space-y-4">
-                            <div>
-                              <h4 className="font-bold text-black mb-2">
-                                Query del usuario:
-                              </h4>
-                              <p className="text-gray-700 italic mb-6">
+                    const typeConfig = getCaseTypeConfig(item.id);
+
+                    return (
+                      <div key={item.id} className="border rounded-lg">
+                        <button
+                          onClick={() => toggleCaseSelection(item.id)}
+                          className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className="font-bold text-black">
+                                  Caso {item.id}:
+                                </span>
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs font-medium ${typeConfig.badge}`}
+                                >
+                                  {typeConfig.type}
+                                </span>
+                              </div>
+                              <p className="text-gray-700 text-sm mb-2">
                                 {item.query}
                               </p>
-                              <hr className="my-4" />
+                              <p className="text-gray-500 text-xs italic">
+                                {typeConfig.description}
+                              </p>
                             </div>
+                            <div className="flex items-center ml-4">
+                              {selectedCases.includes(item.id) ? (
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5 text-blue-600"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              ) : (
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5 text-gray-400"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 5l7 7-7 7"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                        </button>
 
-                            {/* Comparación lado a lado */}
-                            <div className="grid md:grid-cols-2 gap-6">
-                              {/* Sistema Simulado */}
-                              <div className="space-y-4">
-                                <h4 className="font-semibold text-gray-700 text-center">
-                                  Sistema Simulado
+                        {selectedCases.includes(item.id) && (
+                          <div className="p-4 border-t bg-gray-50">
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-bold text-black mb-2">
+                                  Query del usuario:
                                 </h4>
-                                <div className="bg-white p-4 rounded border min-h-[300px]">
-                                  <pre className="whitespace-pre-wrap text-sm">
-                                    {item.response}
-                                  </pre>
-                                </div>
-                                <div>
-                                  <h5 className="font-bold text-black mb-2">
-                                    Métricas de evaluación:
-                                  </h5>
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between p-2 bg-blue-50 rounded">
-                                      <span className="text-sm">
-                                        Estructura:
-                                      </span>
-                                      <span className="font-semibold">
-                                        {Math.round(item.metrics.clarity * 100)}
-                                        %
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between p-2 bg-green-50 rounded">
-                                      <span className="text-sm">
-                                        Palabras clave:
-                                      </span>
-                                      <span className="font-semibold">
-                                        {Math.round(
-                                          item.metrics.accuracy * 100
-                                        )}
-                                        %
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between p-2 bg-yellow-50 rounded">
-                                      <span className="text-sm">
-                                        Clarificación:
-                                      </span>
-                                      <span className="font-semibold">
-                                        {Math.round(
-                                          item.metrics.completeness * 100
-                                        )}
-                                        %
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between p-2 bg-purple-50 rounded">
-                                      <span className="text-sm">Longitud:</span>
-                                      <span className="font-semibold">85%</span>
-                                    </div>
-                                    <div className="flex justify-between p-2 bg-pink-50 rounded">
-                                      <span className="text-sm">Empatía:</span>
-                                      <span className="font-semibold">
-                                        {Math.round(item.metrics.empathy * 100)}
-                                        %
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between p-2 bg-gray-100 rounded font-semibold">
-                                      <span>Score General:</span>
-                                      <span>
-                                        {Math.round(
-                                          ((item.metrics.clarity +
-                                            item.metrics.accuracy +
-                                            item.metrics.completeness +
-                                            item.metrics.empathy) /
-                                            4) *
-                                            100
-                                        )}
-                                        %
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
+                                <p className="text-gray-700 italic mb-6">
+                                  {item.query}
+                                </p>
+                                <hr className="my-4" />
                               </div>
 
-                              {/* Sistema Real con ChatGPT */}
-                              <div className="space-y-4">
-                                <h4 className="font-semibold text-blue-600 text-center">
-                                  Sistema Real (ChatGPT)
-                                </h4>
-
-                                {!evaluationCases[item.id]?.liveResponse ? (
-                                  <div className="bg-gray-50 p-8 rounded border min-h-[300px] flex flex-col items-center justify-center">
-                                    <p className="text-gray-500 mb-4 text-center">
-                                      Haz clic en el botón para probar con
-                                      ChatGPT real
-                                    </p>
-                                    <button
-                                      onClick={() => handleTestCase(item.id)}
-                                      disabled={isLoading[item.id]}
-                                      className={`px-4 py-2 rounded-lg ${
-                                        isLoading[item.id]
-                                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                          : "bg-blue-600 text-white hover:bg-blue-700"
-                                      }`}
-                                    >
-                                      {isLoading[item.id]
-                                        ? "Probando..."
-                                        : "Probar Real"}
-                                    </button>
+                              {/* Comparación lado a lado */}
+                              <div className="grid md:grid-cols-2 gap-6">
+                                {/* Sistema Simulado */}
+                                <div className="space-y-4">
+                                  <h4 className="font-semibold text-gray-700 text-center">
+                                    Sistema Simulado
+                                  </h4>
+                                  <div className="bg-white p-4 rounded border min-h-[300px]">
+                                    <pre className="whitespace-pre-wrap text-sm">
+                                      {item.response}
+                                    </pre>
                                   </div>
-                                ) : (
-                                  <>
-                                    <div className="bg-white p-4 rounded border min-h-[300px]">
-                                      <pre className="whitespace-pre-wrap text-sm">
-                                        {evaluationCases[item.id].liveResponse}
-                                      </pre>
-                                    </div>
-                                    <div>
-                                      <h5 className="font-bold text-black mb-2">
-                                        Métricas de evaluación:
-                                      </h5>
-                                      <div className="space-y-2">
-                                        <div className="flex justify-between p-2 bg-blue-50 rounded">
-                                          <span className="text-sm">
+                                  <div>
+                                    <h5 className="font-bold text-black mb-2">
+                                      Métricas de evaluación:
+                                    </h5>
+                                    <div className="space-y-2">
+                                      {/* Métrica de Estructura - Sistema Simulado */}
+                                      <div className="border rounded-lg">
+                                        <button
+                                          onClick={() =>
+                                            toggleMetricExpansion(
+                                              item.id,
+                                              "sim-structure"
+                                            )
+                                          }
+                                          className="w-full flex justify-between items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                                        >
+                                          <span className="text-sm font-medium">
                                             Estructura:
                                           </span>
-                                          <span className="font-semibold">
-                                            {evaluationCases[item.id]
-                                              .liveMetrics
-                                              ? Math.round(
-                                                  evaluationCases[item.id]
-                                                    .liveMetrics!
-                                                    .structure_score * 100
-                                                )
-                                              : 0}
-                                            %
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between p-2 bg-green-50 rounded">
-                                          <span className="text-sm">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-semibold">
+                                              {evaluationCases[item.id]
+                                                ?.simulatedMetrics
+                                                ? Math.round(
+                                                    evaluationCases[item.id]
+                                                      .simulatedMetrics!
+                                                      .structure_score * 100
+                                                  )
+                                                : Math.round(
+                                                    item.metrics.clarity * 100
+                                                  )}
+                                              %
+                                            </span>
+                                            <svg
+                                              className={`w-4 h-4 transition-transform ${
+                                                expandedMetrics[
+                                                  `${item.id}-sim-structure`
+                                                ]
+                                                  ? "rotate-180"
+                                                  : ""
+                                              }`}
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke="currentColor"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 9l-7 7-7-7"
+                                              />
+                                            </svg>
+                                          </div>
+                                        </button>
+                                        {expandedMetrics[
+                                          `${item.id}-sim-structure`
+                                        ] &&
+                                          evaluationCases[item.id]
+                                            ?.simulatedMetrics && (
+                                            <div className="p-3 border-t bg-blue-25">
+                                              <div className="text-xs space-y-2">
+                                                <div>
+                                                  <span className="font-medium text-green-700">
+                                                    ✅ Componentes encontrados (
+                                                    {
+                                                      evaluationCases[item.id]
+                                                        .simulatedMetrics!
+                                                        .structure_details.found
+                                                        .length
+                                                    }
+                                                    ):
+                                                  </span>
+                                                  <div className="ml-4 mt-1">
+                                                    {evaluationCases[
+                                                      item.id
+                                                    ].simulatedMetrics!.structure_details.found.map(
+                                                      (comp, idx) => (
+                                                        <span
+                                                          key={idx}
+                                                          className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                        >
+                                                          {comp}
+                                                        </span>
+                                                      )
+                                                    )}
+                                                    {evaluationCases[item.id]
+                                                      .simulatedMetrics!
+                                                      .structure_details.found
+                                                      .length === 0 && (
+                                                      <span className="text-gray-500 text-xs">
+                                                        Ninguno
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                                {evaluationCases[item.id]
+                                                  .simulatedMetrics!
+                                                  .structure_details.missing
+                                                  .length > 0 && (
+                                                  <div>
+                                                    <span className="font-medium text-red-700">
+                                                      ❌ Componentes faltantes:
+                                                    </span>
+                                                    <div className="ml-4 mt-1">
+                                                      {evaluationCases[
+                                                        item.id
+                                                      ].simulatedMetrics!.structure_details.missing.map(
+                                                        (comp, idx) => (
+                                                          <span
+                                                            key={idx}
+                                                            className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                          >
+                                                            {comp}
+                                                          </span>
+                                                        )
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                )}
+                                                <div className="text-gray-600 text-xs">
+                                                  Total esperado:{" "}
+                                                  {
+                                                    evaluationCases[item.id]
+                                                      .simulatedMetrics!
+                                                      .structure_details
+                                                      .total_expected
+                                                  }{" "}
+                                                  componentes
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
+                                      </div>
+
+                                      {/* Métrica de Palabras Clave - Sistema Simulado */}
+                                      <div className="border rounded-lg">
+                                        <button
+                                          onClick={() =>
+                                            toggleMetricExpansion(
+                                              item.id,
+                                              "sim-keywords"
+                                            )
+                                          }
+                                          className="w-full flex justify-between items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                                        >
+                                          <span className="text-sm font-medium">
                                             Palabras clave:
                                           </span>
-                                          <span className="font-semibold">
-                                            {evaluationCases[item.id]
-                                              .liveMetrics
-                                              ? Math.round(
-                                                  evaluationCases[item.id]
-                                                    .liveMetrics!
-                                                    .keyword_score * 100
-                                                )
-                                              : 0}
-                                            %
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between p-2 bg-yellow-50 rounded">
-                                          <span className="text-sm">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-semibold">
+                                              {evaluationCases[item.id]
+                                                ?.simulatedMetrics
+                                                ? Math.round(
+                                                    evaluationCases[item.id]
+                                                      .simulatedMetrics!
+                                                      .keyword_score * 100
+                                                  )
+                                                : Math.round(
+                                                    item.metrics.accuracy * 100
+                                                  )}
+                                              %
+                                            </span>
+                                            <svg
+                                              className={`w-4 h-4 transition-transform ${
+                                                expandedMetrics[
+                                                  `${item.id}-sim-keywords`
+                                                ]
+                                                  ? "rotate-180"
+                                                  : ""
+                                              }`}
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke="currentColor"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 9l-7 7-7-7"
+                                              />
+                                            </svg>
+                                          </div>
+                                        </button>
+                                        {expandedMetrics[
+                                          `${item.id}-sim-keywords`
+                                        ] &&
+                                          evaluationCases[item.id]
+                                            ?.simulatedMetrics && (
+                                            <div className="p-3 border-t bg-green-25">
+                                              <div className="text-xs space-y-2">
+                                                <div>
+                                                  <span className="font-medium text-green-700">
+                                                    ✅ Palabras encontradas (
+                                                    {
+                                                      evaluationCases[item.id]
+                                                        .simulatedMetrics!
+                                                        .keyword_details.found
+                                                        .length
+                                                    }
+                                                    ):
+                                                  </span>
+                                                  <div className="ml-4 mt-1">
+                                                    {evaluationCases[
+                                                      item.id
+                                                    ].simulatedMetrics!.keyword_details.found.map(
+                                                      (word, idx) => (
+                                                        <span
+                                                          key={idx}
+                                                          className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                        >
+                                                          {word}
+                                                        </span>
+                                                      )
+                                                    )}
+                                                    {evaluationCases[item.id]
+                                                      .simulatedMetrics!
+                                                      .keyword_details.found
+                                                      .length === 0 && (
+                                                      <span className="text-gray-500 text-xs">
+                                                        Ninguna
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                                {evaluationCases[item.id]
+                                                  .simulatedMetrics!
+                                                  .keyword_details.missing
+                                                  .length > 0 && (
+                                                  <div>
+                                                    <span className="font-medium text-red-700">
+                                                      ❌ Palabras faltantes:
+                                                    </span>
+                                                    <div className="ml-4 mt-1">
+                                                      {evaluationCases[
+                                                        item.id
+                                                      ].simulatedMetrics!.keyword_details.missing.map(
+                                                        (word, idx) => (
+                                                          <span
+                                                            key={idx}
+                                                            className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                          >
+                                                            {word}
+                                                          </span>
+                                                        )
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                )}
+                                                <div className="text-gray-600 text-xs">
+                                                  Total esperado:{" "}
+                                                  {
+                                                    evaluationCases[item.id]
+                                                      .simulatedMetrics!
+                                                      .keyword_details
+                                                      .total_expected
+                                                  }{" "}
+                                                  palabras clave
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
+                                      </div>
+
+                                      {/* Métrica de Clarificación - Sistema Simulado */}
+                                      <div className="border rounded-lg">
+                                        <button
+                                          onClick={() =>
+                                            toggleMetricExpansion(
+                                              item.id,
+                                              "sim-clarification"
+                                            )
+                                          }
+                                          className="w-full flex justify-between items-center p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors"
+                                        >
+                                          <span className="text-sm font-medium">
                                             Clarificación:
                                           </span>
-                                          <span className="font-semibold">
-                                            {evaluationCases[item.id]
-                                              .liveMetrics
-                                              ? Math.round(
-                                                  evaluationCases[item.id]
-                                                    .liveMetrics!
-                                                    .clarification_score * 100
-                                                )
-                                              : 0}
-                                            %
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between p-2 bg-purple-50 rounded">
-                                          <span className="text-sm">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-semibold">
+                                              {evaluationCases[item.id]
+                                                ?.simulatedMetrics
+                                                ? Math.round(
+                                                    evaluationCases[item.id]
+                                                      .simulatedMetrics!
+                                                      .clarification_score * 100
+                                                  )
+                                                : Math.round(
+                                                    item.metrics.completeness *
+                                                      100
+                                                  )}
+                                              %
+                                            </span>
+                                            <svg
+                                              className={`w-4 h-4 transition-transform ${
+                                                expandedMetrics[
+                                                  `${item.id}-sim-clarification`
+                                                ]
+                                                  ? "rotate-180"
+                                                  : ""
+                                              }`}
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke="currentColor"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 9l-7 7-7-7"
+                                              />
+                                            </svg>
+                                          </div>
+                                        </button>
+                                        {expandedMetrics[
+                                          `${item.id}-sim-clarification`
+                                        ] &&
+                                          evaluationCases[item.id]
+                                            ?.simulatedMetrics && (
+                                            <div className="p-3 border-t bg-yellow-25">
+                                              <div className="text-xs space-y-2">
+                                                <div>
+                                                  <span className="font-medium text-gray-700">
+                                                    📋 Análisis de
+                                                    clarificación:
+                                                  </span>
+                                                  <div className="ml-4 mt-1 space-y-1">
+                                                    <div>
+                                                      <span className="font-medium">
+                                                        Necesita clarificación:
+                                                      </span>
+                                                      <span
+                                                        className={`ml-2 px-2 py-1 rounded text-xs ${
+                                                          evaluationCases[
+                                                            item.id
+                                                          ].simulatedMetrics!
+                                                            .clarification_details
+                                                            .needs_clarification
+                                                            ? "bg-orange-100 text-orange-800"
+                                                            : "bg-green-100 text-green-800"
+                                                        }`}
+                                                      >
+                                                        {evaluationCases[
+                                                          item.id
+                                                        ].simulatedMetrics!
+                                                          .clarification_details
+                                                          .needs_clarification
+                                                          ? "Sí"
+                                                          : "No"}
+                                                      </span>
+                                                    </div>
+                                                    <div>
+                                                      <span className="font-medium">
+                                                        Solicita clarificación:
+                                                      </span>
+                                                      <span
+                                                        className={`ml-2 px-2 py-1 rounded text-xs ${
+                                                          evaluationCases[
+                                                            item.id
+                                                          ].simulatedMetrics!
+                                                            .clarification_details
+                                                            .asks_for_clarification
+                                                            ? "bg-blue-100 text-blue-800"
+                                                            : "bg-gray-100 text-gray-800"
+                                                        }`}
+                                                      >
+                                                        {evaluationCases[
+                                                          item.id
+                                                        ].simulatedMetrics!
+                                                          .clarification_details
+                                                          .asks_for_clarification
+                                                          ? "Sí"
+                                                          : "No"}
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                {evaluationCases[item.id]
+                                                  .simulatedMetrics!
+                                                  .clarification_details
+                                                  .clarification_phrases
+                                                  .length > 0 && (
+                                                  <div>
+                                                    <span className="font-medium text-blue-700">
+                                                      🔍 Frases de clarificación
+                                                      encontradas:
+                                                    </span>
+                                                    <div className="ml-4 mt-1">
+                                                      {evaluationCases[
+                                                        item.id
+                                                      ].simulatedMetrics!.clarification_details.clarification_phrases.map(
+                                                        (phrase, idx) => (
+                                                          <span
+                                                            key={idx}
+                                                            className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                          >
+                                                            {phrase}
+                                                          </span>
+                                                        )
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                      </div>
+
+                                      {/* Métrica de Longitud - Sistema Simulado */}
+                                      <div className="border rounded-lg">
+                                        <button
+                                          onClick={() =>
+                                            toggleMetricExpansion(
+                                              item.id,
+                                              "sim-length"
+                                            )
+                                          }
+                                          className="w-full flex justify-between items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+                                        >
+                                          <span className="text-sm font-medium">
                                             Longitud:
                                           </span>
-                                          <span className="font-semibold">
-                                            {evaluationCases[item.id]
-                                              .liveMetrics
-                                              ? Math.round(
-                                                  evaluationCases[item.id]
-                                                    .liveMetrics!.length_score *
-                                                    100
-                                                )
-                                              : 0}
-                                            %
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between p-2 bg-pink-50 rounded">
-                                          <span className="text-sm">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-semibold">
+                                              {evaluationCases[item.id]
+                                                ?.simulatedMetrics
+                                                ? Math.round(
+                                                    evaluationCases[item.id]
+                                                      .simulatedMetrics!
+                                                      .length_score * 100
+                                                  )
+                                                : 85}
+                                              %
+                                            </span>
+                                            <svg
+                                              className={`w-4 h-4 transition-transform ${
+                                                expandedMetrics[
+                                                  `${item.id}-sim-length`
+                                                ]
+                                                  ? "rotate-180"
+                                                  : ""
+                                              }`}
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke="currentColor"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 9l-7 7-7-7"
+                                              />
+                                            </svg>
+                                          </div>
+                                        </button>
+                                        {expandedMetrics[
+                                          `${item.id}-sim-length`
+                                        ] &&
+                                          evaluationCases[item.id]
+                                            ?.simulatedMetrics && (
+                                            <div className="p-3 border-t bg-purple-25">
+                                              <div className="text-xs space-y-2">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                  <div>
+                                                    <span className="font-medium text-gray-700">
+                                                      📏 Caracteres:
+                                                    </span>
+                                                    <span className="ml-2 font-mono bg-gray-100 px-2 py-1 rounded">
+                                                      {
+                                                        evaluationCases[item.id]
+                                                          .simulatedMetrics!
+                                                          .length_details
+                                                          .character_count
+                                                      }
+                                                    </span>
+                                                  </div>
+                                                  <div>
+                                                    <span className="font-medium text-gray-700">
+                                                      📝 Palabras:
+                                                    </span>
+                                                    <span className="ml-2 font-mono bg-gray-100 px-2 py-1 rounded">
+                                                      {
+                                                        evaluationCases[item.id]
+                                                          .simulatedMetrics!
+                                                          .length_details
+                                                          .word_count
+                                                      }
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                                <div>
+                                                  <span className="font-medium text-gray-700">
+                                                    🎯 Rango óptimo:
+                                                  </span>
+                                                  <span className="ml-2 text-green-700">
+                                                    {
+                                                      evaluationCases[item.id]
+                                                        .simulatedMetrics!
+                                                        .length_details
+                                                        .optimal_range
+                                                    }
+                                                  </span>
+                                                </div>
+                                                <div>
+                                                  <span className="font-medium text-gray-700">
+                                                    📊 Categoría:
+                                                  </span>
+                                                  <span
+                                                    className={`ml-2 px-2 py-1 rounded text-xs ${
+                                                      evaluationCases[item.id]
+                                                        .simulatedMetrics!
+                                                        .length_details
+                                                        .actual_category ===
+                                                      "Óptima"
+                                                        ? "bg-green-100 text-green-800"
+                                                        : evaluationCases[
+                                                            item.id
+                                                          ].simulatedMetrics!.length_details.actual_category.includes(
+                                                            "aceptable"
+                                                          )
+                                                        ? "bg-yellow-100 text-yellow-800"
+                                                        : "bg-red-100 text-red-800"
+                                                    }`}
+                                                  >
+                                                    {
+                                                      evaluationCases[item.id]
+                                                        .simulatedMetrics!
+                                                        .length_details
+                                                        .actual_category
+                                                    }
+                                                  </span>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
+                                      </div>
+
+                                      {/* Métrica de Empatía - Sistema Simulado */}
+                                      <div className="border rounded-lg">
+                                        <button
+                                          onClick={() =>
+                                            toggleMetricExpansion(
+                                              item.id,
+                                              "sim-empathy"
+                                            )
+                                          }
+                                          className="w-full flex justify-between items-center p-3 bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors"
+                                        >
+                                          <span className="text-sm font-medium">
                                             Empatía:
                                           </span>
-                                          <span className="font-semibold">
-                                            {evaluationCases[item.id]
-                                              .liveMetrics
-                                              ? Math.round(
-                                                  evaluationCases[item.id]
-                                                    .liveMetrics!
-                                                    .empathy_score * 100
-                                                )
-                                              : 0}
-                                            %
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between p-2 bg-gray-100 rounded font-semibold">
-                                          <span>Score General:</span>
-                                          <span>
-                                            {evaluationCases[item.id]
-                                              .liveMetrics
-                                              ? Math.round(
-                                                  evaluationCases[item.id]
-                                                    .liveMetrics!
-                                                    .overall_score * 100
-                                                )
-                                              : 0}
-                                            %
-                                          </span>
-                                        </div>
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-semibold">
+                                              {evaluationCases[item.id]
+                                                ?.simulatedMetrics
+                                                ? Math.round(
+                                                    evaluationCases[item.id]
+                                                      .simulatedMetrics!
+                                                      .empathy_score * 100
+                                                  )
+                                                : Math.round(
+                                                    item.metrics.empathy * 100
+                                                  )}
+                                              %
+                                            </span>
+                                            <svg
+                                              className={`w-4 h-4 transition-transform ${
+                                                expandedMetrics[
+                                                  `${item.id}-sim-empathy`
+                                                ]
+                                                  ? "rotate-180"
+                                                  : ""
+                                              }`}
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke="currentColor"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 9l-7 7-7-7"
+                                              />
+                                            </svg>
+                                          </div>
+                                        </button>
+                                        {expandedMetrics[
+                                          `${item.id}-sim-empathy`
+                                        ] &&
+                                          evaluationCases[item.id]
+                                            ?.simulatedMetrics && (
+                                            <div className="p-3 border-t bg-pink-25">
+                                              <div className="text-xs space-y-2">
+                                                <div>
+                                                  <span className="font-medium text-pink-700">
+                                                    💝 Indicadores de empatía
+                                                    encontrados (
+                                                    {
+                                                      evaluationCases[item.id]
+                                                        .simulatedMetrics!
+                                                        .empathy_details
+                                                        .found_indicators.length
+                                                    }
+                                                    ):
+                                                  </span>
+                                                  <div className="ml-4 mt-1">
+                                                    {evaluationCases[
+                                                      item.id
+                                                    ].simulatedMetrics!.empathy_details.found_indicators.map(
+                                                      (indicator, idx) => (
+                                                        <span
+                                                          key={idx}
+                                                          className="inline-block bg-pink-100 text-pink-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                        >
+                                                          {indicator}
+                                                        </span>
+                                                      )
+                                                    )}
+                                                    {evaluationCases[item.id]
+                                                      .simulatedMetrics!
+                                                      .empathy_details
+                                                      .found_indicators
+                                                      .length === 0 && (
+                                                      <span className="text-gray-500 text-xs">
+                                                        Ninguno detectado
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                                <div className="text-gray-600 text-xs">
+                                                  💡 Se buscan palabras como:
+                                                  entiendo, perfecto, ayudo,
+                                                  lamento, bienvenido, gracias,
+                                                  excelente, encantado
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
+                                      </div>
+
+                                      {/* Score General - Sistema Simulado */}
+                                      <div className="flex justify-between p-3 bg-gray-100 rounded-lg font-semibold border-2">
+                                        <span>🏆 Score General:</span>
+                                        <span className="text-lg">
+                                          {evaluationCases[item.id]
+                                            ?.simulatedMetrics
+                                            ? Math.round(
+                                                evaluationCases[item.id]
+                                                  .simulatedMetrics!
+                                                  .overall_score * 100
+                                              )
+                                            : Math.round(
+                                                ((item.metrics.clarity +
+                                                  item.metrics.accuracy +
+                                                  item.metrics.completeness +
+                                                  item.metrics.empathy) /
+                                                  4) *
+                                                  100
+                                              )}
+                                          %
+                                        </span>
                                       </div>
                                     </div>
-                                  </>
-                                )}
+                                  </div>
+                                </div>
+
+                                {/* Sistema Real con ChatGPT */}
+                                <div className="space-y-4">
+                                  <h4 className="font-semibold text-blue-600 text-center">
+                                    Sistema Real (ChatGPT)
+                                  </h4>
+
+                                  {!evaluationCases[item.id]?.liveResponse ? (
+                                    <div className="bg-gray-50 p-8 rounded border min-h-[300px] flex flex-col items-center justify-center">
+                                      <p className="text-gray-500 mb-4 text-center">
+                                        Haz clic en el botón para probar con
+                                        ChatGPT real
+                                      </p>
+                                      <button
+                                        onClick={() => handleTestCase(item.id)}
+                                        disabled={isLoading[item.id]}
+                                        className={`px-4 py-2 rounded-lg ${
+                                          isLoading[item.id]
+                                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                            : "bg-blue-600 text-white hover:bg-blue-700"
+                                        }`}
+                                      >
+                                        {isLoading[item.id]
+                                          ? "Probando..."
+                                          : "Probar Real"}
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="bg-white p-4 rounded border min-h-[300px]">
+                                        <pre className="whitespace-pre-wrap text-sm">
+                                          {
+                                            evaluationCases[item.id]
+                                              .liveResponse
+                                          }
+                                        </pre>
+                                      </div>
+
+                                      {/* Detalles técnicos de la llamada a la API */}
+                                      <div className="bg-blue-50 p-4 rounded border mt-4">
+                                        <h6 className="font-semibold text-blue-800 mb-2">
+                                          🔧 Detalles Técnicos de la Llamada
+                                        </h6>
+                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                          <div>
+                                            <span className="font-medium text-blue-700">
+                                              Tiempo de respuesta:
+                                            </span>
+                                            <span className="ml-2 text-blue-600">
+                                              {evaluationCases[item.id]
+                                                .responseTime || 0}
+                                              ms
+                                            </span>
+                                          </div>
+                                          <div>
+                                            <span className="font-medium text-blue-700">
+                                              Timestamp:
+                                            </span>
+                                            <span className="ml-2 text-blue-600">
+                                              {evaluationCases[item.id]
+                                                .timestamp
+                                                ? new Date(
+                                                    evaluationCases[
+                                                      item.id
+                                                    ].timestamp!
+                                                  ).toLocaleString()
+                                                : "N/A"}
+                                            </span>
+                                          </div>
+                                          <div>
+                                            <span className="font-medium text-blue-700">
+                                              Caracteres:
+                                            </span>
+                                            <span className="ml-2 text-blue-600">
+                                              {evaluationCases[item.id]
+                                                .liveResponse?.length || 0}
+                                            </span>
+                                          </div>
+                                          <div>
+                                            <span className="font-medium text-blue-700">
+                                              Palabras:
+                                            </span>
+                                            <span className="ml-2 text-blue-600">
+                                              {evaluationCases[
+                                                item.id
+                                              ].liveResponse?.split(" ")
+                                                .length || 0}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div>
+                                        <h5 className="font-bold text-black mb-2">
+                                          Métricas de evaluación:
+                                        </h5>
+                                        <div className="space-y-2">
+                                          {/* Métrica de Estructura */}
+                                          <div className="border rounded-lg">
+                                            <button
+                                              onClick={() =>
+                                                toggleMetricExpansion(
+                                                  item.id,
+                                                  "structure"
+                                                )
+                                              }
+                                              className="w-full flex justify-between items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                                            >
+                                              <span className="text-sm font-medium">
+                                                Estructura:
+                                              </span>
+                                              <div className="flex items-center gap-2">
+                                                <span className="font-semibold">
+                                                  {evaluationCases[item.id]
+                                                    ?.liveMetrics
+                                                    ? Math.round(
+                                                        evaluationCases[item.id]
+                                                          .liveMetrics!
+                                                          .structure_score * 100
+                                                      )
+                                                    : 0}
+                                                  %
+                                                </span>
+                                                <svg
+                                                  className={`w-4 h-4 transition-transform ${
+                                                    expandedMetrics[
+                                                      `${item.id}-structure`
+                                                    ]
+                                                      ? "rotate-180"
+                                                      : ""
+                                                  }`}
+                                                  fill="none"
+                                                  viewBox="0 0 24 24"
+                                                  stroke="currentColor"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M19 9l-7 7-7-7"
+                                                  />
+                                                </svg>
+                                              </div>
+                                            </button>
+                                            {expandedMetrics[
+                                              `${item.id}-structure`
+                                            ] &&
+                                              evaluationCases[item.id]
+                                                ?.liveMetrics && (
+                                                <div className="p-3 border-t bg-blue-25">
+                                                  <div className="text-xs space-y-2">
+                                                    <div>
+                                                      <span className="font-medium text-green-700">
+                                                        ✅ Componentes
+                                                        encontrados (
+                                                        {
+                                                          evaluationCases[
+                                                            item.id
+                                                          ].liveMetrics!
+                                                            .structure_details
+                                                            .found.length
+                                                        }
+                                                        ):
+                                                      </span>
+                                                      <div className="ml-4 mt-1">
+                                                        {evaluationCases[
+                                                          item.id
+                                                        ].liveMetrics!.structure_details.found.map(
+                                                          (comp, idx) => (
+                                                            <span
+                                                              key={idx}
+                                                              className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                            >
+                                                              {comp}
+                                                            </span>
+                                                          )
+                                                        )}
+                                                        {evaluationCases[
+                                                          item.id
+                                                        ].liveMetrics!
+                                                          .structure_details
+                                                          .found.length ===
+                                                          0 && (
+                                                          <span className="text-gray-500 text-xs">
+                                                            Ninguno
+                                                          </span>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                    {evaluationCases[item.id]
+                                                      .liveMetrics!
+                                                      .structure_details.missing
+                                                      .length > 0 && (
+                                                      <div>
+                                                        <span className="font-medium text-red-700">
+                                                          ❌ Componentes
+                                                          faltantes:
+                                                        </span>
+                                                        <div className="ml-4 mt-1">
+                                                          {evaluationCases[
+                                                            item.id
+                                                          ].liveMetrics!.structure_details.missing.map(
+                                                            (comp, idx) => (
+                                                              <span
+                                                                key={idx}
+                                                                className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                              >
+                                                                {comp}
+                                                              </span>
+                                                            )
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    )}
+                                                    <div className="text-gray-600 text-xs">
+                                                      Total esperado:{" "}
+                                                      {
+                                                        evaluationCases[item.id]
+                                                          .liveMetrics!
+                                                          .structure_details
+                                                          .total_expected
+                                                      }{" "}
+                                                      componentes
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )}
+                                          </div>
+
+                                          {/* Métrica de Palabras Clave */}
+                                          <div className="border rounded-lg">
+                                            <button
+                                              onClick={() =>
+                                                toggleMetricExpansion(
+                                                  item.id,
+                                                  "keywords"
+                                                )
+                                              }
+                                              className="w-full flex justify-between items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                                            >
+                                              <span className="text-sm font-medium">
+                                                Palabras clave:
+                                              </span>
+                                              <div className="flex items-center gap-2">
+                                                <span className="font-semibold">
+                                                  {evaluationCases[item.id]
+                                                    ?.liveMetrics
+                                                    ? Math.round(
+                                                        evaluationCases[item.id]
+                                                          .liveMetrics!
+                                                          .keyword_score * 100
+                                                      )
+                                                    : 0}
+                                                  %
+                                                </span>
+                                                <svg
+                                                  className={`w-4 h-4 transition-transform ${
+                                                    expandedMetrics[
+                                                      `${item.id}-keywords`
+                                                    ]
+                                                      ? "rotate-180"
+                                                      : ""
+                                                  }`}
+                                                  fill="none"
+                                                  viewBox="0 0 24 24"
+                                                  stroke="currentColor"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M19 9l-7 7-7-7"
+                                                  />
+                                                </svg>
+                                              </div>
+                                            </button>
+                                            {expandedMetrics[
+                                              `${item.id}-keywords`
+                                            ] &&
+                                              evaluationCases[item.id]
+                                                ?.liveMetrics && (
+                                                <div className="p-3 border-t bg-green-25">
+                                                  <div className="text-xs space-y-2">
+                                                    <div>
+                                                      <span className="font-medium text-green-700">
+                                                        ✅ Palabras encontradas
+                                                        (
+                                                        {
+                                                          evaluationCases[
+                                                            item.id
+                                                          ].liveMetrics!
+                                                            .keyword_details
+                                                            .found.length
+                                                        }
+                                                        ):
+                                                      </span>
+                                                      <div className="ml-4 mt-1">
+                                                        {evaluationCases[
+                                                          item.id
+                                                        ].liveMetrics!.keyword_details.found.map(
+                                                          (word, idx) => (
+                                                            <span
+                                                              key={idx}
+                                                              className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                            >
+                                                              {word}
+                                                            </span>
+                                                          )
+                                                        )}
+                                                        {evaluationCases[
+                                                          item.id
+                                                        ].liveMetrics!
+                                                          .keyword_details.found
+                                                          .length === 0 && (
+                                                          <span className="text-gray-500 text-xs">
+                                                            Ninguna
+                                                          </span>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                    {evaluationCases[item.id]
+                                                      .liveMetrics!
+                                                      .keyword_details.missing
+                                                      .length > 0 && (
+                                                      <div>
+                                                        <span className="font-medium text-red-700">
+                                                          ❌ Palabras faltantes:
+                                                        </span>
+                                                        <div className="ml-4 mt-1">
+                                                          {evaluationCases[
+                                                            item.id
+                                                          ].liveMetrics!.keyword_details.missing.map(
+                                                            (word, idx) => (
+                                                              <span
+                                                                key={idx}
+                                                                className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                              >
+                                                                {word}
+                                                              </span>
+                                                            )
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    )}
+                                                    <div className="text-gray-600 text-xs">
+                                                      Total esperado:{" "}
+                                                      {
+                                                        evaluationCases[item.id]
+                                                          .liveMetrics!
+                                                          .keyword_details
+                                                          .total_expected
+                                                      }{" "}
+                                                      palabras clave
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )}
+                                          </div>
+
+                                          {/* Métrica de Clarificación */}
+                                          <div className="border rounded-lg">
+                                            <button
+                                              onClick={() =>
+                                                toggleMetricExpansion(
+                                                  item.id,
+                                                  "clarification"
+                                                )
+                                              }
+                                              className="w-full flex justify-between items-center p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors"
+                                            >
+                                              <span className="text-sm font-medium">
+                                                Clarificación:
+                                              </span>
+                                              <div className="flex items-center gap-2">
+                                                <span className="font-semibold">
+                                                  {evaluationCases[item.id]
+                                                    ?.liveMetrics
+                                                    ? Math.round(
+                                                        evaluationCases[item.id]
+                                                          .liveMetrics!
+                                                          .clarification_score *
+                                                          100
+                                                      )
+                                                    : 0}
+                                                  %
+                                                </span>
+                                                <svg
+                                                  className={`w-4 h-4 transition-transform ${
+                                                    expandedMetrics[
+                                                      `${item.id}-clarification`
+                                                    ]
+                                                      ? "rotate-180"
+                                                      : ""
+                                                  }`}
+                                                  fill="none"
+                                                  viewBox="0 0 24 24"
+                                                  stroke="currentColor"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M19 9l-7 7-7-7"
+                                                  />
+                                                </svg>
+                                              </div>
+                                            </button>
+                                            {expandedMetrics[
+                                              `${item.id}-clarification`
+                                            ] &&
+                                              evaluationCases[item.id]
+                                                ?.liveMetrics && (
+                                                <div className="p-3 border-t bg-yellow-25">
+                                                  <div className="text-xs space-y-2">
+                                                    <div>
+                                                      <span className="font-medium text-gray-700">
+                                                        📋 Análisis de
+                                                        clarificación:
+                                                      </span>
+                                                      <div className="ml-4 mt-1 space-y-1">
+                                                        <div>
+                                                          <span className="font-medium">
+                                                            Necesita
+                                                            clarificación:
+                                                          </span>
+                                                          <span
+                                                            className={`ml-2 px-2 py-1 rounded text-xs ${
+                                                              evaluationCases[
+                                                                item.id
+                                                              ].liveMetrics!
+                                                                .clarification_details
+                                                                .needs_clarification
+                                                                ? "bg-orange-100 text-orange-800"
+                                                                : "bg-green-100 text-green-800"
+                                                            }`}
+                                                          >
+                                                            {evaluationCases[
+                                                              item.id
+                                                            ].liveMetrics!
+                                                              .clarification_details
+                                                              .needs_clarification
+                                                              ? "Sí"
+                                                              : "No"}
+                                                          </span>
+                                                        </div>
+                                                        <div>
+                                                          <span className="font-medium">
+                                                            Solicita
+                                                            clarificación:
+                                                          </span>
+                                                          <span
+                                                            className={`ml-2 px-2 py-1 rounded text-xs ${
+                                                              evaluationCases[
+                                                                item.id
+                                                              ].liveMetrics!
+                                                                .clarification_details
+                                                                .asks_for_clarification
+                                                                ? "bg-blue-100 text-blue-800"
+                                                                : "bg-gray-100 text-gray-800"
+                                                            }`}
+                                                          >
+                                                            {evaluationCases[
+                                                              item.id
+                                                            ].liveMetrics!
+                                                              .clarification_details
+                                                              .asks_for_clarification
+                                                              ? "Sí"
+                                                              : "No"}
+                                                          </span>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                    {evaluationCases[item.id]
+                                                      .liveMetrics!
+                                                      .clarification_details
+                                                      .clarification_phrases
+                                                      .length > 0 && (
+                                                      <div>
+                                                        <span className="font-medium text-blue-700">
+                                                          🔍 Frases de
+                                                          clarificación
+                                                          encontradas:
+                                                        </span>
+                                                        <div className="ml-4 mt-1">
+                                                          {evaluationCases[
+                                                            item.id
+                                                          ].liveMetrics!.clarification_details.clarification_phrases.map(
+                                                            (phrase, idx) => (
+                                                              <span
+                                                                key={idx}
+                                                                className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                              >
+                                                                {phrase}
+                                                              </span>
+                                                            )
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              )}
+                                          </div>
+
+                                          {/* Métrica de Longitud */}
+                                          <div className="border rounded-lg">
+                                            <button
+                                              onClick={() =>
+                                                toggleMetricExpansion(
+                                                  item.id,
+                                                  "length"
+                                                )
+                                              }
+                                              className="w-full flex justify-between items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+                                            >
+                                              <span className="text-sm font-medium">
+                                                Longitud:
+                                              </span>
+                                              <div className="flex items-center gap-2">
+                                                <span className="font-semibold">
+                                                  {evaluationCases[item.id]
+                                                    ?.liveMetrics
+                                                    ? Math.round(
+                                                        evaluationCases[item.id]
+                                                          .liveMetrics!
+                                                          .length_score * 100
+                                                      )
+                                                    : 0}
+                                                  %
+                                                </span>
+                                                <svg
+                                                  className={`w-4 h-4 transition-transform ${
+                                                    expandedMetrics[
+                                                      `${item.id}-length`
+                                                    ]
+                                                      ? "rotate-180"
+                                                      : ""
+                                                  }`}
+                                                  fill="none"
+                                                  viewBox="0 0 24 24"
+                                                  stroke="currentColor"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M19 9l-7 7-7-7"
+                                                  />
+                                                </svg>
+                                              </div>
+                                            </button>
+                                            {expandedMetrics[
+                                              `${item.id}-length`
+                                            ] &&
+                                              evaluationCases[item.id]
+                                                ?.liveMetrics && (
+                                                <div className="p-3 border-t bg-purple-25">
+                                                  <div className="text-xs space-y-2">
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                      <div>
+                                                        <span className="font-medium text-gray-700">
+                                                          📏 Caracteres:
+                                                        </span>
+                                                        <span className="ml-2 font-mono bg-gray-100 px-2 py-1 rounded">
+                                                          {
+                                                            evaluationCases[
+                                                              item.id
+                                                            ].liveMetrics!
+                                                              .length_details
+                                                              .character_count
+                                                          }
+                                                        </span>
+                                                      </div>
+                                                      <div>
+                                                        <span className="font-medium text-gray-700">
+                                                          📝 Palabras:
+                                                        </span>
+                                                        <span className="ml-2 font-mono bg-gray-100 px-2 py-1 rounded">
+                                                          {
+                                                            evaluationCases[
+                                                              item.id
+                                                            ].liveMetrics!
+                                                              .length_details
+                                                              .word_count
+                                                          }
+                                                        </span>
+                                                      </div>
+                                                    </div>
+                                                    <div>
+                                                      <span className="font-medium text-gray-700">
+                                                        🎯 Rango óptimo:
+                                                      </span>
+                                                      <span className="ml-2 text-green-700">
+                                                        {
+                                                          evaluationCases[
+                                                            item.id
+                                                          ].liveMetrics!
+                                                            .length_details
+                                                            .optimal_range
+                                                        }
+                                                      </span>
+                                                    </div>
+                                                    <div>
+                                                      <span className="font-medium text-gray-700">
+                                                        📊 Categoría:
+                                                      </span>
+                                                      <span
+                                                        className={`ml-2 px-2 py-1 rounded text-xs ${
+                                                          evaluationCases[
+                                                            item.id
+                                                          ].liveMetrics!
+                                                            .length_details
+                                                            .actual_category ===
+                                                          "Óptima"
+                                                            ? "bg-green-100 text-green-800"
+                                                            : evaluationCases[
+                                                                item.id
+                                                              ].liveMetrics!.length_details.actual_category.includes(
+                                                                "aceptable"
+                                                              )
+                                                            ? "bg-yellow-100 text-yellow-800"
+                                                            : "bg-red-100 text-red-800"
+                                                        }`}
+                                                      >
+                                                        {
+                                                          evaluationCases[
+                                                            item.id
+                                                          ].liveMetrics!
+                                                            .length_details
+                                                            .actual_category
+                                                        }
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )}
+                                          </div>
+
+                                          {/* Métrica de Empatía */}
+                                          <div className="border rounded-lg">
+                                            <button
+                                              onClick={() =>
+                                                toggleMetricExpansion(
+                                                  item.id,
+                                                  "empathy"
+                                                )
+                                              }
+                                              className="w-full flex justify-between items-center p-3 bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors"
+                                            >
+                                              <span className="text-sm font-medium">
+                                                Empatía:
+                                              </span>
+                                              <div className="flex items-center gap-2">
+                                                <span className="font-semibold">
+                                                  {evaluationCases[item.id]
+                                                    ?.liveMetrics
+                                                    ? Math.round(
+                                                        evaluationCases[item.id]
+                                                          .liveMetrics!
+                                                          .empathy_score * 100
+                                                      )
+                                                    : 0}
+                                                  %
+                                                </span>
+                                                <svg
+                                                  className={`w-4 h-4 transition-transform ${
+                                                    expandedMetrics[
+                                                      `${item.id}-empathy`
+                                                    ]
+                                                      ? "rotate-180"
+                                                      : ""
+                                                  }`}
+                                                  fill="none"
+                                                  viewBox="0 0 24 24"
+                                                  stroke="currentColor"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M19 9l-7 7-7-7"
+                                                  />
+                                                </svg>
+                                              </div>
+                                            </button>
+                                            {expandedMetrics[
+                                              `${item.id}-empathy`
+                                            ] &&
+                                              evaluationCases[item.id]
+                                                ?.liveMetrics && (
+                                                <div className="p-3 border-t bg-pink-25">
+                                                  <div className="text-xs space-y-2">
+                                                    <div>
+                                                      <span className="font-medium text-pink-700">
+                                                        💝 Indicadores de
+                                                        empatía encontrados (
+                                                        {
+                                                          evaluationCases[
+                                                            item.id
+                                                          ].liveMetrics!
+                                                            .empathy_details
+                                                            .found_indicators
+                                                            .length
+                                                        }
+                                                        ):
+                                                      </span>
+                                                      <div className="ml-4 mt-1">
+                                                        {evaluationCases[
+                                                          item.id
+                                                        ].liveMetrics!.empathy_details.found_indicators.map(
+                                                          (indicator, idx) => (
+                                                            <span
+                                                              key={idx}
+                                                              className="inline-block bg-pink-100 text-pink-800 px-2 py-1 rounded mr-2 mb-1 text-xs"
+                                                            >
+                                                              {indicator}
+                                                            </span>
+                                                          )
+                                                        )}
+                                                        {evaluationCases[
+                                                          item.id
+                                                        ].liveMetrics!
+                                                          .empathy_details
+                                                          .found_indicators
+                                                          .length === 0 && (
+                                                          <span className="text-gray-500 text-xs">
+                                                            Ninguno detectado
+                                                          </span>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                    <div className="text-gray-600 text-xs">
+                                                      💡 Se buscan palabras
+                                                      como: entiendo, perfecto,
+                                                      ayudo, lamento,
+                                                      bienvenido, gracias,
+                                                      excelente, encantado
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )}
+                                          </div>
+
+                                          {/* Score General */}
+                                          <div className="flex justify-between p-3 bg-gray-100 rounded-lg font-semibold border-2">
+                                            <span>🏆 Score General:</span>
+                                            <span className="text-lg">
+                                              {evaluationCases[item.id]
+                                                ?.liveMetrics
+                                                ? Math.round(
+                                                    evaluationCases[item.id]
+                                                      .liveMetrics!
+                                                      .overall_score * 100
+                                                  )
+                                                : 0}
+                                              %
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1101,6 +2797,32 @@ Mantén siempre un tono profesional, empático y orientado a la solución.`}</pr
   length_score: number;
   empathy_score: number;
   overall_score: number;
+  // Nuevos campos para detalles
+  structure_details: {
+    found: string[];
+    missing: string[];
+    total_expected: number;
+  };
+  keyword_details: {
+    found: string[];
+    missing: string[];
+    total_expected: number;
+  };
+  clarification_details: {
+    needs_clarification: boolean;
+    asks_for_clarification: boolean;
+    clarification_phrases: string[];
+  };
+  length_details: {
+    character_count: number;
+    word_count: number;
+    optimal_range: string;
+    actual_category: string;
+  };
+  empathy_details: {
+    found_indicators: string[];
+    empathy_phrases: string[];
+  };
 }
 
 interface ExpectedData {
@@ -1117,60 +2839,151 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
     length_score: 0,
     empathy_score: 0,
     overall_score: 0,
+    // Inicializar nuevos campos
+    structure_details: { found: [], missing: [], total_expected: 0 },
+    keyword_details: { found: [], missing: [], total_expected: 0 },
+    clarification_details: {
+      needs_clarification: false,
+      asks_for_clarification: false,
+      clarification_phrases: [],
+    },
+    length_details: {
+      character_count: 0,
+      word_count: 0,
+      optimal_range: "",
+      actual_category: "",
+    },
+    empathy_details: { found_indicators: [], empathy_phrases: [] },
   };
 
   // 1. Verificar componentes estructurales
   let structureScore = 0;
+  const foundComponents: string[] = [];
+  const missingComponents: string[] = [];
+  
   for (const component of expectedData.expectedComponents) {
     if (component === "analysis" && 
         response.includes("🤔") && response.includes("Análisis:")) {
       structureScore += 1;
+      foundComponents.push("🤔 Análisis");
     } else if (component === "response" && 
                response.includes("💡") && response.includes("Respuesta:")) {
       structureScore += 1;
+      foundComponents.push("💡 Respuesta");
     } else if (component === "details" && 
                response.includes("📋") && response.includes("Detalles:")) {
       structureScore += 1;
+      foundComponents.push("📋 Detalles");
     } else if (component === "next_step" && 
                response.includes("🔄") && response.includes("Siguiente paso:")) {
       structureScore += 1;
+      foundComponents.push("🔄 Siguiente paso");
+    } else {
+      missingComponents.push(component);
     }
   }
   results.structure_score = structureScore / expectedData.expectedComponents.length;
+  results.structure_details = {
+    found: foundComponents,
+    missing: missingComponents,
+    total_expected: expectedData.expectedComponents.length,
+  };
 
   // 2. Verificar presencia de palabras clave
   let keywordsFound = 0;
+  const foundKeywords: string[] = [];
+  const missingKeywords: string[] = [];
   const responseLower = response.toLowerCase();
+  
   for (const keyword of expectedData.expectedKeywords) {
     if (responseLower.includes(keyword.toLowerCase())) {
       keywordsFound += 1;
+      foundKeywords.push(keyword);
+    } else {
+      missingKeywords.push(keyword);
     }
   }
   results.keyword_score = keywordsFound / expectedData.expectedKeywords.length;
+  results.keyword_details = {
+    found: foundKeywords,
+    missing: missingKeywords,
+    total_expected: expectedData.expectedKeywords.length,
+  };
 
   // 3. Verificar manejo de aclaración
   const needsClarification = expectedData.requiresClarification;
-  const asksForClarification = ["necesito", "podrías", "específico", "aclaración", "cuál", "qué"]
-    .some(phrase => responseLower.includes(phrase));
+  const clarificationPhrases = [
+    "necesito",
+    "podrías",
+    "específico",
+    "aclaración",
+    "cuál",
+    "qué",
+    "dime",
+    "indicar",
+    "proporcionar",
+  ];
   
+  const foundClarificationPhrases = clarificationPhrases.filter((phrase) =>
+    responseLower.includes(phrase)
+  );
+  
+  const asksForClarification = foundClarificationPhrases.length > 0;
   results.clarification_score = needsClarification === asksForClarification ? 1.0 : 0.0;
+  results.clarification_details = {
+    needs_clarification: needsClarification,
+    asks_for_clarification: asksForClarification,
+    clarification_phrases: foundClarificationPhrases,
+  };
 
   // 4. Verificar longitud apropiada
   const length = response.length;
+  const wordCount = response.split(' ').length;
+  let lengthCategory = "";
+  
   if (length >= 200 && length <= 800) {
     results.length_score = 1.0;
-  } else if ((length >= 100 && length < 200) || (length > 800 && length <= 1000)) {
+    lengthCategory = "Óptima";
+  } else if (
+    (length >= 100 && length < 200) ||
+    (length > 800 && length <= 1000)
+  ) {
     results.length_score = 0.7;
+    lengthCategory = length < 200 ? "Corta pero aceptable" : "Larga pero aceptable";
   } else {
     results.length_score = 0.3;
+    lengthCategory = length < 100 ? "Muy corta" : "Muy larga";
   }
+  
+  results.length_details = {
+    character_count: length,
+    word_count: wordCount,
+    optimal_range: "200-800 caracteres",
+    actual_category: lengthCategory,
+  };
 
   // 5. Verificar tono empático
-  const empathyIndicators = ["entiendo", "perfecto", "ayudo", "lamento", "bienvenido"];
-  const empathyScore = empathyIndicators.filter(indicator => 
+  const empathyIndicators = [
+    "entiendo",
+    "perfecto",
+    "ayudo", 
+    "lamento",
+    "bienvenido",
+    "gracias",
+    "excelente",
+    "encantado",
+  ];
+  
+  const foundEmpathyIndicators = empathyIndicators.filter((indicator) =>
     responseLower.includes(indicator)
-  ).length;
+  );
+  
+  const empathyScore = foundEmpathyIndicators.length;
   results.empathy_score = Math.min(empathyScore / 2, 1.0);
+  results.empathy_details = {
+    found_indicators: foundEmpathyIndicators,
+    empathy_phrases: foundEmpathyIndicators,
+  };
 
   // 6. Score general
   results.overall_score = (
@@ -1207,9 +3020,7 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
                 </p>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="bg-white p-5 rounded-lg shadow-sm border">
-                    <h4 className="font-bold text-black mb-2">
-                      1. Estructura (~86%)
-                    </h4>
+                    <h4 className="font-bold text-black mb-2">1. Estructura</h4>
                     <p className="text-sm text-gray-700">
                       Verifica componentes estructurales: Análisis, Respuesta,
                       Detalles y Siguiente paso. Busca emojis específicos y
@@ -1217,9 +3028,7 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
                     </p>
                   </div>
                   <div className="bg-white p-5 rounded-lg shadow-sm border">
-                    <h4 className="font-bold text-black mb-2">
-                      2. Empatía (~74%)
-                    </h4>
+                    <h4 className="font-bold text-black mb-2">2. Empatía</h4>
                     <p className="text-sm text-gray-700">
                       Identifica 5 palabras empáticas específicas:
                       &quot;entiendo&quot;, &quot;perfecto&quot;,
@@ -1229,7 +3038,7 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
                   </div>
                   <div className="bg-white p-5 rounded-lg shadow-sm border">
                     <h4 className="font-bold text-black mb-2">
-                      3. Palabras clave (~79%)
+                      3. Palabras clave
                     </h4>
                     <p className="text-sm text-gray-700">
                       Verifica presencia de términos relevantes según el
@@ -1239,7 +3048,7 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
                   </div>
                   <div className="bg-white p-5 rounded-lg shadow-sm border">
                     <h4 className="font-bold text-black mb-2">
-                      4. Score general (~79%)
+                      4. Score general
                     </h4>
                     <p className="text-sm text-gray-700">
                       Combina todas las métricas con pesos: Estructura (30%),
@@ -1309,7 +3118,9 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
                     <div className="flex justify-end">
                       <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Usuario</div>
-                        <div>&quot;Quiero cambiar mi vuelo a Bogotá.&quot;</div>
+                        <div>
+                          &quot;Quiero cambiar mi vuelo a Asunción.&quot;
+                        </div>
                       </div>
                     </div>
                     <div className="flex justify-start">

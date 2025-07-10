@@ -18,6 +18,7 @@ export interface EvaluationCase {
 }
 
 export const evaluationCases: EvaluationCase[] = [
+  // CASO 1: EXITOSO - Ejemplo perfecto
   {
     id: 1,
     input: "¿Cuál es el límite de mi tarjeta de crédito?",
@@ -30,7 +31,7 @@ export const evaluationCases: EvaluationCase[] = [
 
 💡 **Respuesta:** Comprendo tu interés en conocer el límite exacto de tu tarjeta de crédito. Me da mucho gusto poder ayudarte con esta consulta. Para darte la información más precisa, necesito verificar algunos datos de tu cuenta de forma segura.
 
-📋 **Detalles:** Los límites de tarjeta de crédito se asignan según tu scoring crediticio y pueden variar entre $10,000 y $200,000. Nuestra tarjeta de crédito tiene una cuota anual de $2,500, pero los beneficios que obtienes realmente valen la pena.
+📋 **Detalles:** Los límites de tarjeta de crédito se asignan según tu scoring crediticio y pueden variar entre ₲2,500,000 y ₲50,000,000. Nuestra tarjeta de crédito tiene una cuota anual de ₲1,500,000, pero los beneficios que obtienes realmente valen la pena.
 
 🔄 **Siguiente paso:** Por favor proporciona los últimos 4 dígitos de tu tarjeta y tu número de identificación para proceder con la consulta. Te aseguro que manejaremos tu información con total confidencialidad.`,
     scores: {
@@ -42,6 +43,7 @@ export const evaluationCases: EvaluationCase[] = [
       overall: 0.91,
     },
   },
+  // CASO 2: EXITOSO - Manejo de consulta ambigua
   {
     id: 2,
     input: "¿Cuánto me cobran?",
@@ -62,8 +64,8 @@ export const evaluationCases: EvaluationCase[] = [
 
 📋 **Detalles:** Te comparto un resumen de nuestros productos y sus costos:
 - Tarjeta de débito: Sin cuota anual (¡completamente gratis!)
-- Tarjeta de crédito: $2,500 anuales (con excelentes beneficios)
-- Préstamos: Tasa desde 18% anual (muy competitiva en el mercado)
+- Tarjeta de crédito: ₲1,500,000 anuales (con excelentes beneficios)
+- Préstamos: Tasa desde 22% anual (muy competitiva en el mercado)
 
 🔄 **Siguiente paso:** ¿Podrías decirme si preguntas sobre tarjeta de débito, tarjeta de crédito o préstamos? Así podré darte detalles específicos que realmente te sirvan.`,
     scores: {
@@ -75,13 +77,20 @@ export const evaluationCases: EvaluationCase[] = [
       overall: 0.98,
     },
   },
+  // CASO 3: EXITOSO - Información específica
   {
     id: 3,
-    input: "Necesito un préstamo de $100,000",
+    input: "Necesito un préstamo de ₲100,000,000",
     category: "prestamo",
     complexity: "media",
     expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["préstamo", "$100,000", "tasa", "plazo", "pago mensual"],
+    expectedKeywords: [
+      "préstamo",
+      "₲100,000,000",
+      "tasa",
+      "plazo",
+      "pago mensual",
+    ],
     requiresClarification: false,
     response: `🤔 **Análisis:** El cliente solicita información sobre un préstamo específico de $100,000. Entiendo que debe tener un proyecto importante o una necesidad específica. Este monto está perfectamente dentro de nuestro rango disponible (hasta $500,000).
 
@@ -103,6 +112,7 @@ export const evaluationCases: EvaluationCase[] = [
       overall: 0.88,
     },
   },
+  // CASO 4: EXITOSO - Manejo de problema técnico
   {
     id: 4,
     input: "Mi tarjeta de débito no funciona",
@@ -131,6 +141,7 @@ export const evaluationCases: EvaluationCase[] = [
       overall: 1.0,
     },
   },
+  // CASO 5: EXITOSO - Consulta simple y directa
   {
     id: 5,
     input: "¿Qué documentos necesito para la tarjeta de crédito?",
@@ -159,36 +170,9 @@ export const evaluationCases: EvaluationCase[] = [
       overall: 0.88,
     },
   },
+  // CASO 6: EXITOSO - Manejo de queja con empatía
   {
     id: 6,
-    input: "¿Puedo pagar mi préstamo antes?",
-    category: "prestamo",
-    complexity: "media",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["préstamo", "pago anticipado", "prepago"],
-    requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente pregunta sobre pago anticipado de préstamo. Me parece excelente que esté considerando esta opción, demuestra responsabilidad financiera. Esta es una consulta válida sobre nuestros términos y condiciones.
-
-💡 **Respuesta:** ¡Qué excelente noticia que estés considerando pagar tu préstamo anticipadamente! Esto habla muy bien de tu manejo financiero. Me da mucho gusto confirmarte que sí puedes realizar pagos anticipados sin ninguna penalización.
-
-📋 **Detalles:** Nuestras condiciones de prepago son muy flexibles:
-- Pagos anticipados sin comisión alguna (¡cero penalizaciones!)
-- Reducción proporcional de intereses (ahorras dinero real)
-- Puedes pagar parcial o totalmente según tu conveniencia
-- El ahorro en intereses depende del tiempo restante del préstamo
-
-🔄 **Siguiente paso:** ¿Te gustaría que calculemos exactamente cuánto ahorrarías con un pago anticipado en tu préstamo específico? Me encantaría ayudarte a ver las opciones.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.67,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.9,
-      overall: 0.85,
-    },
-  },
-  {
-    id: 7,
     input: "Estoy muy molesto, me cobraron algo que no entiendo",
     category: "queja",
     complexity: "alta",
@@ -214,62 +198,84 @@ export const evaluationCases: EvaluationCase[] = [
       overall: 1.0,
     },
   },
+  // CASO 7: PROBLEMÁTICO - SIN ESTRUCTURA (Falla crítica)
   {
-    id: 8,
+    id: 7,
     input: "¿Cuánto puedo retirar con mi tarjeta de débito?",
     category: "tarjeta_debito",
     complexity: "baja",
     expectedComponents: ["analysis", "response", "details", "next_step"],
     expectedKeywords: ["tarjeta de débito", "retirar", "límite"],
     requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente pregunta sobre límites de retiro con tarjeta de débito. Es una consulta muy práctica y entiendo que necesita esta información para planificar sus retiros. Esta es información estándar que puedo proporcionar con claridad.
-
-💡 **Respuesta:** ¡Excelente pregunta! Me da gusto ayudarte a entender los límites de retiro. Los límites dependen de tu tipo de cuenta y perfil, pero te explico todo para que tengas claridad total.
-
-📋 **Detalles:** Nuestros límites estándar son muy generosos:
-- Retiro diario: Entre $10,000 y $50,000 (dependiendo de tu perfil)
-- Retiro por transacción: Hasta $10,000 por cada retiro
-- Sin límite en número de transacciones diarias
-- Los límites pueden ajustarse según tus necesidades específicas
-
-🔄 **Siguiente paso:** ¿Te gustaría que verifique cuál es tu límite específico actual? También puedo ayudarte si necesitas solicitar un ajuste en tus límites.`,
+    response: `El cliente pregunta sobre límites de retiro. Los límites dependen del perfil. Límites estándar: retiro diario entre ₲250,000 y ₲2,500,000, retiro por transacción hasta ₲500,000, sin límite en número de transacciones. Los límites pueden ajustarse. ¿Necesitas verificar tu límite específico?`,
     scores: {
-      structure: 1.0,
-      keywords: 1.0,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.7,
-      overall: 0.82,
+      structure: 0.0, // Sin emojis ni formato
+      keywords: 0.67, // Menciona algunas palabras clave
+      clarification: 0.0, // No requiere pero no maneja bien
+      length: 0.4, // Muy corto
+      empathy: 0.0, // Muy frío y robótico
+      overall: 0.21,
     },
   },
+  // CASO 8: PROBLEMÁTICO - SIN EMPATÍA (Falla de tono)
   {
-    id: 9,
+    id: 8,
     input: "¿Qué pasa si no pago mi tarjeta de crédito?",
     category: "tarjeta_credito",
     complexity: "alta",
     expectedComponents: ["analysis", "response", "details", "next_step"],
     expectedKeywords: ["tarjeta de crédito", "pago", "consecuencias"],
     requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente pregunta sobre consecuencias de no pagar su tarjeta de crédito. Entiendo que puede estar pasando por una situación difícil financieramente. Es importante ser claro sobre las implicaciones pero sin generar alarma innecesaria, y ofrecer apoyo.
+    response: `🤔 **Análisis:** Consulta sobre consecuencias de no pagar tarjeta de crédito. Información estándar disponible.
 
-💡 **Respuesta:** Aprecio mucho que me hagas esta pregunta - demuestra que eres responsable al querer entender las consecuencias. Entiendo que a veces pueden surgir dificultades financieras. Es importante mantener los pagos al día, pero si tienes problemas, estamos aquí para ayudarte.
+💡 **Respuesta:** Las consecuencias del no pago son claras y deben cumplirse según términos y condiciones.
 
-📋 **Detalles:** Las consecuencias del no pago incluyen:
-- Intereses moratorios (que aumentan tu deuda)
-- Comisión por pago tardío 
-- Afectación en tu historial crediticio (esto es lo más serio)
-- Posible bloqueo temporal de la tarjeta
+📋 **Detalles:** Al no pagar se generan:
+- Intereses moratorios del 3% mensual
+- Comisión por pago tardío de ₲125,000
+- Reporte negativo en buró de crédito
+- Bloqueo de tarjeta después de 90 días
 
-🔄 **Siguiente paso:** ¿Estás teniendo dificultades para realizar tu pago? Por favor no te preocupes, podemos ayudarte con opciones de refinanciamiento, planes de pago flexibles, o reestructuración. Lo importante es que hablemos.`,
+🔄 **Siguiente paso:** Debe realizar el pago inmediatamente para evitar estas consecuencias. Contáctenos para opciones de pago.`,
     scores: {
-      structure: 1.0,
-      keywords: 1.0,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.9,
-      overall: 0.94,
+      structure: 1.0, // Tiene estructura
+      keywords: 1.0, // Menciona palabras clave
+      clarification: 0.0, // No requiere aclaración
+      length: 0.8, // Longitud adecuada
+      empathy: 0.0, // Muy frío, sin empatía
+      overall: 0.56,
     },
   },
+  // CASO 9: PROBLEMÁTICO - INFORMACIÓN INCORRECTA (Falla de precisión)
+  {
+    id: 9,
+    input: "¿Puedo pagar mi préstamo antes?",
+    category: "prestamo",
+    complexity: "media",
+    expectedComponents: ["analysis", "response", "details", "next_step"],
+    expectedKeywords: ["préstamo", "pago anticipado", "prepago"],
+    requiresClarification: false,
+    response: `🤔 **Análisis:** El cliente pregunta sobre pago anticipado de préstamo. Esta es una consulta sobre políticas de prepago.
+
+💡 **Respuesta:** ¡Por supuesto que puedes pagar tu préstamo antes! Nos da mucho gusto que estés considerando esta opción.
+
+📋 **Detalles:** Las condiciones de prepago incluyen:
+- Comisión por pago anticipado del 2% sobre el saldo
+- Penalización por cancelación temprana de ₲250,000
+- Debes pagar al menos el 80% del préstamo para calificar
+- Solo se permite después de 12 meses de pagos
+
+🔄 **Siguiente paso:** ¿Te gustaría que calculemos el costo total del prepago? Podemos programar una cita para revisar tu caso específico.`,
+    scores: {
+      structure: 1.0, // Tiene estructura
+      keywords: 0.33, // Menciona pocas palabras clave correctas
+      clarification: 0.0, // No requiere aclaración
+      length: 1.0, // Longitud adecuada
+      empathy: 0.8, // Tiene empatía
+      overall: 0.43, // Falla por información incorrecta
+    },
+  },
+  // CASO 10: LÍMITE - Parcialmente bueno pero con fallas menores
   {
     id: 10,
     input: "Hola",
@@ -278,450 +284,28 @@ export const evaluationCases: EvaluationCase[] = [
     expectedComponents: ["analysis", "response", "details", "next_step"],
     expectedKeywords: ["ayuda", "productos", "servicios"],
     requiresClarification: true,
-    response: `🤔 **Análisis:** El cliente me saluda de manera general y cordial. Debo responder con la misma calidez y entusiasmo, ofreciendo ayuda genuina con nuestros productos y servicios.
+    response: `🤔 **Análisis:** El cliente me saluda de manera general. Debo responder cordialmente y ofrecer ayuda.
 
-💡 **Respuesta:** ¡Hola! ¡Qué gusto saludarte! Bienvenido a FinTechPro. Estoy aquí para ayudarte con todas tus consultas financieras y me da muchísimo gusto poder asistirte hoy.
+💡 **Respuesta:** ¡Hola! Bienvenido a FinTechPro. Estoy aquí para ayudarte con todas tus consultas financieras.
 
-📋 **Detalles:** Puedo ayudarte con todos nuestros productos:
-- Tarjetas de débito (sin cuota anual, ¡completamente gratis!)
-- Tarjetas de crédito (cuota anual $2,500 con beneficios increíbles)
-- Préstamos (hasta $500,000, desde 18% anual con tasas muy competitivas)
+📋 **Detalles:** Puedo ayudarte con:
+- Tarjetas de débito y crédito
+- Préstamos personales
+- Consultas sobre tu cuenta
 
-🔄 **Siguiente paso:** ¿En qué producto o servicio te gustaría que te ayude hoy? Estoy aquí para resolver todas tus dudas y encontrar la mejor opción para ti.`,
+🔄 **Siguiente paso:** ¿En qué puedo ayudarte hoy?`,
     scores: {
-      structure: 1.0,
-      keywords: 1.0,
-      clarification: 1.0,
-      length: 1.0,
-      empathy: 0.9,
-      overall: 0.98,
-    },
-  },
-  // NUEVOS CASOS PARA EXPANDIR A 25
-  {
-    id: 11,
-    input: "¿Cómo puedo cancelar mi tarjeta de crédito?",
-    category: "tarjeta_credito",
-    complexity: "media",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["cancelar", "tarjeta de crédito", "proceso"],
-    requiresClarification: true,
-    response: `🤔 **Análisis:** El cliente quiere cancelar su tarjeta de crédito. Entiendo que puede haber varias razones para esta decisión. Es importante entender el motivo para poder ofrecer alternativas si es posible, pero también respetar su decisión.
-
-💡 **Respuesta:** Entiendo que quieras cancelar tu tarjeta de crédito y respeto completamente tu decisión. Antes de proceder, me gustaría asegurarme de que tengas toda la información necesaria y ver si hay algo que podamos hacer para mejorar tu experiencia.
-
-📋 **Detalles:** Para el proceso de cancelación necesitamos:
-- Liquidar completamente el saldo pendiente
-- Verificar que no haya transacciones pendientes de procesar
-- Confirmar la cancelación por escrito
-- El proceso toma de 5 a 7 días hábiles
-
-🔄 **Siguiente paso:** ¿Podrías contarme qué te motivó a tomar esta decisión? Quizás podamos resolver cualquier inconveniente que hayas tenido, o si prefieres proceder, te guío en todo el proceso.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.67,
-      clarification: 1.0,
-      length: 1.0,
-      empathy: 0.9,
-      overall: 0.91,
-    },
-  },
-  {
-    id: 12,
-    input: "No recuerdo mi número de cuenta",
-    category: "general",
-    complexity: "media",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["número de cuenta", "recuperar", "verificación"],
-    requiresClarification: true,
-    response: `🤔 **Análisis:** El cliente no recuerda su número de cuenta. Esto es muy común y comprensible. Necesito ayudarle a recuperar esta información de manera segura, siguiendo protocolos de verificación de identidad.
-
-💡 **Respuesta:** No te preocupes para nada, esto pasa con mucha frecuencia y es completamente normal. Estoy aquí para ayudarte a recuperar tu número de cuenta de forma rápida y segura.
-
-📋 **Detalles:** Puedo ayudarte a encontrar tu número de cuenta usando:
-- Tu número de teléfono registrado
-- Tu email de confirmación
-- Tu nombre completo y fecha de nacimiento
-- Los últimos 4 dígitos de tu tarjeta (si los recuerdas)
-
-🔄 **Siguiente paso:** ¿Qué información tienes disponible? Con cualquiera de estos datos puedo ayudarte a recuperar tu número de cuenta de manera completamente segura.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.67,
-      clarification: 1.0,
-      length: 1.0,
-      empathy: 0.8,
-      overall: 0.89,
-    },
-  },
-  {
-    id: 13,
-    input: "¿Puedo aumentar el límite de mi tarjeta?",
-    category: "tarjeta_credito",
-    complexity: "media",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["aumentar", "límite", "tarjeta", "evaluación"],
-    requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente solicita aumentar el límite de su tarjeta. Esto indica que está usando activamente su crédito y posiblemente necesita más capacidad. Es una consulta muy positiva que demuestra crecimiento financiero.
-
-💡 **Respuesta:** ¡Por supuesto! Me da mucho gusto que quieras aumentar tu límite de crédito. Esto indica que estás manejando bien tu tarjeta y necesitas mayor capacidad financiera. Tenemos un proceso muy sencillo para evaluarlo.
-
-📋 **Detalles:** Para evaluar el aumento necesitamos revisar:
-- Tu historial de pagos reciente (últimos 6 meses)
-- Tus ingresos actuales
-- Tu comportamiento crediticio
-- El tiempo que llevas como cliente
-
-🔄 **Siguiente paso:** ¿Podrías decirme qué límite te gustaría tener? Puedo iniciar la evaluación de inmediato y en 24-48 horas tendrás una respuesta.`,
-    scores: {
-      structure: 1.0,
-      keywords: 1.0,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.8,
-      overall: 0.88,
-    },
-  },
-  {
-    id: 14,
-    input: "¿Qué beneficios tiene la tarjeta de crédito?",
-    category: "tarjeta_credito",
-    complexity: "baja",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["beneficios", "tarjeta de crédito", "ventajas"],
-    requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente quiere conocer los beneficios de nuestra tarjeta de crédito. Es una excelente consulta que muestra interés genuino en nuestro producto. Debo resaltar los beneficios más atractivos.
-
-💡 **Respuesta:** ¡Excelente pregunta! Me emociona compartir contigo todos los increíbles beneficios que tiene nuestra tarjeta de crédito. Realmente tenemos un producto muy competitivo y lleno de ventajas.
-
-📋 **Detalles:** Los beneficios principales incluyen:
-- Programa de puntos que se convierten en dinero real
-- Seguro de compras incluido
-- Acceso a salas VIP en aeropuertos
-- Descuentos exclusivos en restaurantes y tiendas
-- Sin comisión por anualidad el primer año
-- Protección contra fraudes 24/7
-
-🔄 **Siguiente paso:** ¿Te gustaría que te explique más detalles sobre algún beneficio específico? También puedo ayudarte a iniciar tu solicitud si te interesa.`,
-    scores: {
-      structure: 1.0,
-      keywords: 1.0,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.7,
-      overall: 0.86,
-    },
-  },
-  {
-    id: 15,
-    input: "Mi pago no se reflejó",
-    category: "queja",
-    complexity: "alta",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["pago", "reflejó", "investigación", "solución"],
-    requiresClarification: true,
-    response: `🤔 **Análisis:** El cliente reporta que su pago no se reflejó. Entiendo que esto debe generar mucha preocupación y ansiedad. Es crucial resolver esto rápidamente para evitar cargos por mora o afectación en su historial.
-
-💡 **Respuesta:** Lamento muchísimo que estés pasando por esta situación. Entiendo perfectamente tu preocupación - no hay nada más estresante que hacer un pago y que no se refleje. Vamos a resolver esto de inmediato.
-
-📋 **Detalles:** Para investigar tu pago necesito:
-- La fecha exacta en que realizaste el pago
-- El método de pago utilizado (transferencia, depósito, etc.)
-- El monto pagado
-- El número de referencia o comprobante si lo tienes
-
-🔄 **Siguiente paso:** ¿Podrías proporcionarme estos datos? Mientras tanto, te aseguro que no se generarán intereses o comisiones por mora mientras resolvemos esta situación.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.75,
-      clarification: 1.0,
-      length: 1.0,
-      empathy: 1.0,
-      overall: 0.95,
-    },
-  },
-  {
-    id: 16,
-    input: "¿Cómo cambio mi dirección?",
-    category: "general",
-    complexity: "baja",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["cambio", "dirección", "actualizar", "documentos"],
-    requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente necesita actualizar su dirección. Es muy responsable de su parte mantener actualizada esta información. Este es un proceso sencillo pero importante para mantener su cuenta en orden.
-
-💡 **Respuesta:** ¡Qué bueno que quieras mantener actualizada tu información! Es muy importante tener tus datos correctos. El proceso para cambiar tu dirección es muy sencillo y te ayudo con todo.
-
-📋 **Detalles:** Para actualizar tu dirección necesitas:
-- Comprobante de domicilio reciente (no mayor a 3 meses)
-- Puede ser recibo de luz, agua, teléfono o estado de cuenta bancario
-- Identificación oficial vigente
-- El proceso es gratuito y toma 24-48 horas
-
-🔄 **Siguiente paso:** ¿Ya tienes el comprobante de domicilio disponible? Puedo programar una cita para que vengas a nuestras oficinas o te explico cómo enviarlo de forma digital.`,
-    scores: {
-      structure: 1.0,
-      keywords: 1.0,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.7,
-      overall: 0.86,
-    },
-  },
-  {
-    id: 17,
-    input: "¿Cuándo vence mi pago?",
-    category: "tarjeta_credito",
-    complexity: "baja",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["vencimiento", "pago", "fecha", "consulta"],
-    requiresClarification: true,
-    response: `🤔 **Análisis:** El cliente necesita conocer la fecha de vencimiento de su pago. Es una consulta muy responsable que demuestra que quiere mantenerse al día. Necesito acceder a su información específica.
-
-💡 **Respuesta:** ¡Me da muchísimo gusto que seas tan responsable con tus pagos! Es exactamente la actitud que nos gusta ver. Te ayudo de inmediato a consultar tu fecha de vencimiento.
-
-📋 **Detalles:** Para darte la fecha exacta necesito:
-- Verificar tu identidad con los últimos 4 dígitos de tu tarjeta
-- También puedo enviarte un SMS o email con toda la información de tu próximo pago
-- Puedo ayudarte a configurar recordatorios automáticos
-
-🔄 **Siguiente paso:** ¿Tienes a la mano los últimos 4 dígitos de tu tarjeta? También, ¿te gustaría que configure recordatorios para que nunca se te olvide una fecha de pago?`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.75,
-      clarification: 1.0,
-      length: 1.0,
-      empathy: 0.8,
-      overall: 0.91,
-    },
-  },
-  {
-    id: 18,
-    input: "¿Puedo usar mi tarjeta en el extranjero?",
-    category: "tarjeta_credito",
-    complexity: "media",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["extranjero", "tarjeta", "viajes", "comisiones"],
-    requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente pregunta sobre el uso internacional de su tarjeta. Probablemente esté planeando un viaje y es muy inteligente que pregunte antes de partir. Debo darle información completa sobre uso internacional.
-
-💡 **Respuesta:** ¡Por supuesto que puedes usar tu tarjeta en el extranjero! Qué emocionante que estés planeando un viaje. Nuestras tarjetas funcionan perfectamente en todo el mundo y te explico todo para que viajes tranquilo.
-
-📋 **Detalles:** Para uso internacional:
-- Funciona en más de 200 países
-- Comisión por transacción internacional: 3.5%
-- Te recomendamos notificar tu viaje para evitar bloqueos por seguridad
-- El tipo de cambio se actualiza diariamente
-
-🔄 **Siguiente paso:** ¿A qué país viajarás y cuándo? Puedo registrar tu viaje en el sistema para evitar cualquier inconveniente y darte consejos específicos para tu destino.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.75,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.8,
-      overall: 0.87,
-    },
-  },
-  {
-    id: 19,
-    input: "No puedo acceder a mi banca en línea",
-    category: "general",
-    complexity: "alta",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["banca en línea", "acceso", "problema", "contraseña"],
-    requiresClarification: true,
-    response: `🤔 **Análisis:** El cliente tiene problemas para acceder a su banca en línea. Entiendo que esto puede ser muy frustrante, especialmente si necesita hacer operaciones urgentes. Debo ayudarle a resolver esto paso a paso.
-
-💡 **Respuesta:** Lamento mucho que tengas problemas para acceder a tu banca en línea. Entiendo lo frustrante que debe ser no poder ingresar cuando lo necesitas. Vamos a solucionarlo juntos paso a paso.
-
-📋 **Detalles:** Los problemas más comunes son:
-- Contraseña olvidada o expirada
-- Usuario bloqueado por intentos fallidos
-- Problemas de conectividad o navegador
-- Necesidad de actualizar la aplicación
-
-🔄 **Siguiente paso:** ¿Qué mensaje específico aparece cuando intentas ingresar? Con esa información puedo darte la solución exacta, ya sea reset de contraseña, desbloqueo de usuario o asistencia técnica.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.75,
-      clarification: 1.0,
-      length: 1.0,
-      empathy: 0.9,
-      overall: 0.93,
-    },
-  },
-  {
-    id: 20,
-    input: "¿Qué tasa de interés maneja en préstamos?",
-    category: "prestamo",
-    complexity: "baja",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["tasa", "interés", "préstamos", "porcentaje"],
-    requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente consulta sobre las tasas de interés en préstamos. Es una pregunta muy inteligente - la tasa es uno de los factores más importantes al elegir un préstamo. Debo ser transparente y claro con esta información.
-
-💡 **Respuesta:** ¡Excelente pregunta! Me encanta que preguntes sobre las tasas porque demuestra que eres un cliente informado. Tenemos tasas muy competitivas en el mercado y te explico todo claramente.
-
-📋 **Detalles:** Nuestras tasas de préstamos:
-- Tasa desde 18% anual fija (la más baja del mercado)
-- La tasa final depende de tu perfil crediticio
-- Sin comisiones ocultas por apertura o administración
-- Puedes obtener tasas preferenciales con buen historial
-
-🔄 **Siguiente paso:** ¿Te gustaría que evalúe qué tasa específica podrías obtener según tu perfil? Puedo hacer una precalificación sin afectar tu buró de crédito.`,
-    scores: {
-      structure: 1.0,
-      keywords: 1.0,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.7,
-      overall: 0.86,
-    },
-  },
-  {
-    id: 21,
-    input: "Me clonaron la tarjeta",
-    category: "queja",
-    complexity: "alta",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["clonaron", "tarjeta", "fraude", "bloqueo"],
-    requiresClarification: true,
-    response: `🤔 **Análisis:** El cliente reporta que le clonaron su tarjeta. Esta es una situación muy seria que requiere acción inmediata. Entiendo que debe estar muy preocupado y posiblemente asustado. Necesito actuar rápidamente para proteger sus fondos.
-
-💡 **Respuesta:** Lamento muchísimo que hayas pasado por esta terrible experiencia. Entiendo perfectamente lo angustiante que debe ser. Quiero que sepas que estás completamente protegido y vamos a resolver esto de inmediato.
-
-📋 **Detalles:** Acciones inmediatas que tomaremos:
-- Bloqueo inmediato de tu tarjeta actual
-- Investigación completa de transacciones no autorizadas
-- Reversión de todos los cargos fraudulentos
-- Emisión de nueva tarjeta en 24-48 horas
-
-🔄 **Siguiente paso:** ¿Puedes identificar desde cuándo notaste transacciones extrañas? Te voy a transferir inmediatamente al departamento de fraudes para iniciar la protección total de tu cuenta.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.75,
-      clarification: 1.0,
-      length: 1.0,
-      empathy: 1.0,
-      overall: 0.95,
-    },
-  },
-  {
-    id: 22,
-    input: "¿Cómo puedo invertir mi dinero?",
-    category: "general",
-    complexity: "media",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["invertir", "dinero", "opciones", "rendimientos"],
-    requiresClarification: true,
-    response: `🤔 **Análisis:** El cliente está interesado en opciones de inversión. Esto demuestra una mentalidad financiera muy madura y el deseo de hacer crecer su patrimonio. Debo explicar nuestras opciones de inversión disponibles.
-
-💡 **Respuesta:** ¡Qué fantástico que estés pensando en hacer crecer tu dinero! Me da muchísimo gusto saber que quieres invertir. Tenemos varias opciones excelentes que se adaptan a diferentes perfiles de riesgo.
-
-📋 **Detalles:** Nuestros productos de inversión incluyen:
-- Cuentas de ahorro con rendimientos atractivos
-- Certificados de depósito a plazo fijo
-- Fondos de inversión diversificados
-- Asesoría personalizada gratuita
-
-🔄 **Siguiente paso:** ¿Qué monto estás considerando invertir y cuál es tu horizonte de tiempo? Con esa información puedo recomendarte la mejor opción para tu situación específica.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.75,
-      clarification: 1.0,
-      length: 1.0,
-      empathy: 0.8,
-      overall: 0.91,
-    },
-  },
-  {
-    id: 23,
-    input: "¿Tienen seguro de vida?",
-    category: "general",
-    complexity: "baja",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["seguro", "vida", "protección", "beneficiarios"],
-    requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente pregunta sobre seguros de vida. Es una consulta muy responsable que demuestra preocupación por la protección de su familia. Debo explicar nuestras opciones de seguros disponibles.
-
-💡 **Respuesta:** ¡Qué responsable de tu parte pensar en la protección de tu familia! Me parece excelente que consideres un seguro de vida. Sí tenemos productos de seguros muy competitivos y completos.
-
-📋 **Detalles:** Nuestros seguros de vida incluyen:
-- Cobertura desde $100,000 hasta $2,000,000
-- Primas muy accesibles desde $300 mensuales
-- Cobertura por muerte natural y accidental
-- Beneficios adicionales por invalidez total
-
-🔄 **Siguiente paso:** ¿Te gustaría que uno de nuestros asesores especialistas en seguros te contacte para hacer un análisis personalizado? Es completamente gratuito y sin compromiso.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.75,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.8,
-      overall: 0.87,
-    },
-  },
-  {
-    id: 24,
-    input: "¿Puedo domiciliar mis pagos?",
-    category: "general",
-    complexity: "baja",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["domiciliar", "pagos", "automático", "débito"],
-    requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente quiere domiciliar sus pagos. Es una excelente estrategia para nunca olvidar pagos y mantener un historial crediticio impecable. Debo explicar las ventajas y el proceso.
-
-💡 **Respuesta:** ¡Absolutamente sí! Me parece una decisión muy inteligente domiciliar tus pagos. Es la mejor forma de asegurar que nunca se te olvide un pago y mantener tu historial crediticio perfecto.
-
-📋 **Detalles:** Los beneficios de domiciliar incluyen:
-- Nunca más pagos tardíos
-- Descuento del 0.5% en tu tasa de interés
-- Puedes elegir pagar mínimo, fijo o total
-- Cancelas la domiciliación cuando gustes
-
-🔄 **Siguiente paso:** ¿Desde qué cuenta te gustaría domiciliar y qué modalidad prefieres? Puedo configurarlo de inmediato y estará listo para tu próximo corte.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.75,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.7,
-      overall: 0.85,
-    },
-  },
-  {
-    id: 25,
-    input: "¿Qué pasa si pierdo mi tarjeta?",
-    category: "general",
-    complexity: "media",
-    expectedComponents: ["analysis", "response", "details", "next_step"],
-    expectedKeywords: ["perder", "tarjeta", "bloqueo", "reposición"],
-    requiresClarification: false,
-    response: `🤔 **Análisis:** El cliente pregunta qué hacer si pierde su tarjeta. Es muy inteligente que pregunte antes de que pase para estar preparado. Debo explicar el proceso completo de reporte y reposición.
-
-💡 **Respuesta:** ¡Excelente que preguntes esto antes de que pase! Es muy inteligente estar preparado. No te preocupes, tenemos un proceso muy eficiente para estos casos y tu dinero siempre estará protegido.
-
-📋 **Detalles:** Si pierdes tu tarjeta debes:
-- Reportar inmediatamente al 800-123-4567 (disponible 24/7)
-- Bloqueo inmediato para evitar uso no autorizado
-- Nueva tarjeta en 24-48 horas sin costo
-- Mismo número de cuenta, solo cambia el número de tarjeta
-
-🔄 **Siguiente paso:** ¿Te gustaría que anote en tu expediente un número adicional de contacto de emergencia? También puedo explicarte cómo usar nuestra app para bloquear la tarjeta instantáneamente.`,
-    scores: {
-      structure: 1.0,
-      keywords: 0.75,
-      clarification: 0.0,
-      length: 1.0,
-      empathy: 0.8,
-      overall: 0.87,
+      structure: 1.0, // Tiene estructura
+      keywords: 0.67, // Menciona algunos productos
+      clarification: 1.0, // Maneja bien la necesidad de aclaración
+      length: 0.6, // Un poco corto
+      empathy: 0.6, // Empatía básica pero no excepcional
+      overall: 0.77, // Funcional pero no excepcional
     },
   },
 ];
 
-export const FINTECH_PROMPT = `Eres un asistente especializado en atención al cliente para una fintech llamada "FinTechPro". 
+export const FINTECH_PROMPT = `Eres un asistente especializado en atención al cliente para una fintech paraguaya llamada "FinTechPro". 
 Tu objetivo es ayudar a los clientes de manera clara, precisa y empática con consultas sobre 
 nuestros productos: tarjetas de débito, tarjetas de crédito y préstamos.
 
@@ -734,8 +318,8 @@ nuestros productos: tarjetas de débito, tarjetas de crédito y préstamos.
 
 ## PRODUCTOS DISPONIBLES:
 - **Tarjetas de Débito**: Sin cuota anual, límite según ingresos, débito inmediato
-- **Tarjetas de Crédito**: Cuota anual $2,500, límite según scoring, facturación mensual
-- **Préstamos**: Monto hasta $500,000, tasa desde 18% anual, plazo hasta 60 meses
+- **Tarjetas de Crédito**: Cuota anual ₲1,500,000, límite según scoring, facturación mensual
+- **Préstamos**: Monto hasta ₲500,000,000, tasa desde 22% anual, plazo hasta 60 meses
 
 ## FORMATO DE RESPUESTA:
 🤔 **Análisis:** [Tu proceso de razonamiento]
