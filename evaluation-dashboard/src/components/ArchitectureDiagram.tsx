@@ -242,6 +242,457 @@ export default function ArchitectureDiagram() {
           </ul>
         </div>
       </div>
+
+      {/* NUEVA SECCIÓN: Justificaciones Técnicas */}
+      <div className="bg-white p-6 rounded-lg border shadow-lg">
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">
+          🏗️ Justificaciones de Decisiones Arquitectónicas
+        </h3>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="border-l-4 border-blue-500 pl-4">
+              <h4 className="font-semibold text-blue-700 mb-2">
+                🎯 Arquitectura Microservicios
+              </h4>
+              <p className="text-sm text-gray-600">
+                <strong>Decisión:</strong> Separar NLU, gestor diálogo y NLG
+                como servicios independientes.
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                <strong>Justificación:</strong> Permite escalar cada componente
+                según demanda, facilita mantenimiento y despliegue
+                independiente. Crítico para aerolíneas con picos de tráfico
+                estacionales.
+              </p>
+            </div>
+
+            <div className="border-l-4 border-green-500 pl-4">
+              <h4 className="font-semibold text-green-700 mb-2">
+                🔄 Gestor de Diálogo Centralizado
+              </h4>
+              <p className="text-sm text-gray-600">
+                <strong>Decisión:</strong> Mantener estado conversacional en
+                servicio dedicado con Redis distribuido.
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                <strong>Justificación:</strong> Conversaciones aerolínea son
+                multi-turno complejas (cambio vuelo + equipaje + asientos).
+                Requiere persistencia de contexto entre sesiones.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="border-l-4 border-purple-500 pl-4">
+              <h4 className="font-semibold text-purple-700 mb-2">
+                🌐 Integración GDS Híbrida
+              </h4>
+              <p className="text-sm text-gray-600">
+                <strong>Decisión:</strong> Conectar directamente con
+                Amadeus/Sabre + cache local + fallback.
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                <strong>Justificación:</strong> GDS tienen latencia alta
+                (300-500ms). Cache permite respuestas &lt;100ms para consultas
+                frecuentes. Fallback asegura disponibilidad 99.9%.
+              </p>
+            </div>
+
+            <div className="border-l-4 border-orange-500 pl-4">
+              <h4 className="font-semibold text-orange-700 mb-2">
+                📊 Observabilidad Distribuida
+              </h4>
+              <p className="text-sm text-gray-600">
+                <strong>Decisión:</strong> Tracing completo con Jaeger +
+                métricas Prometheus + logs ELK.
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                <strong>Justificación:</strong> Debugging conversaciones
+                complejas requiere visibilidad completa del flujo. Crítico para
+                detectar fallas en cadena de servicios.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* NUEVA SECCIÓN: Desafíos Conversacionales */}
+      <div className="bg-white p-6 rounded-lg border shadow-lg">
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">
+          🚨 Desafíos Conversacionales Específicos
+        </h3>
+        <div className="space-y-6">
+          <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+            <h4 className="font-semibold text-red-700 mb-3">
+              🔄 Desafío: Cambio de Vuelo con Múltiples Restricciones
+            </h4>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <h5 className="font-semibold text-gray-700 mb-2">
+                  ❌ Escenario Problemático:
+                </h5>
+                <div className="bg-white p-3 rounded border text-sm">
+                  <p>
+                    <strong>Usuario:</strong> "Necesito cambiar mi vuelo del
+                    viernes"
+                  </p>
+                  <p>
+                    <strong>Bot:</strong> "¿A qué fecha deseas cambiarlo?"
+                  </p>
+                  <p>
+                    <strong>Usuario:</strong> "No sé, algo más barato"
+                  </p>
+                  <p>
+                    <strong>Bot:</strong> "¿Qué fechas prefieres?"
+                  </p>
+                  <p>
+                    <strong>Usuario:</strong> "Las que sean más baratas..."
+                  </p>
+                  <p className="text-red-600 mt-2">
+                    <strong>PROBLEMA:</strong> Conversación circular, bot no
+                    entiende restricción presupuestaria
+                  </p>
+                </div>
+              </div>
+              <div>
+                <h5 className="font-semibold text-gray-700 mb-2">
+                  ✅ Solución Arquitectónica:
+                </h5>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>
+                    • <strong>Motor NLU:</strong> Detecta intención implícita
+                    "optimizar precio"
+                  </li>
+                  <li>
+                    • <strong>Gestor Diálogo:</strong> Mantiene contexto de
+                    restricción presupuestaria
+                  </li>
+                  <li>
+                    • <strong>Backend:</strong> Consulta GDS con filtros de
+                    precio
+                  </li>
+                  <li>
+                    • <strong>NLG:</strong> Propone 3 opciones más baratas
+                    ordenadas
+                  </li>
+                  <li>
+                    • <strong>Escalamiento:</strong> Si &gt;3 intentos fallidos
+                    → agente humano
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="border border-orange-200 rounded-lg p-4 bg-orange-50">
+            <h4 className="font-semibold text-orange-700 mb-3">
+              🎭 Desafío: Manejo de Emociones en Crisis
+            </h4>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <h5 className="font-semibold text-gray-700 mb-2">
+                  🚨 Escenario Crítico:
+                </h5>
+                <div className="bg-white p-3 rounded border text-sm">
+                  <p>
+                    <strong>Usuario:</strong> "MI VUELO SE CANCELÓ Y TENGO UNA
+                    EMERGENCIA FAMILIAR!!"
+                  </p>
+                  <p>
+                    <strong>Análisis automático:</strong> Sentimiento negativo
+                    alto + urgencia + mayúsculas
+                  </p>
+                  <p className="text-orange-600 mt-2">
+                    <strong>DESAFÍO:</strong> Detectar crisis emocional +
+                    priorizar + escalar apropiadamente
+                  </p>
+                </div>
+              </div>
+              <div>
+                <h5 className="font-semibold text-gray-700 mb-2">
+                  🎯 Solución Implementada:
+                </h5>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>
+                    • <strong>Análisis Sentimiento:</strong> Detecta urgencia
+                    emocional → prioridad alta
+                  </li>
+                  <li>
+                    • <strong>NLG Empático:</strong> Respuesta inicial:
+                    "Entiendo tu situación urgente..."
+                  </li>
+                  <li>
+                    • <strong>Escalamiento Inmediato:</strong> &lt;30 segundos →
+                    agente humano especializado
+                  </li>
+                  <li>
+                    • <strong>Contexto Preservado:</strong> Toda la conversación
+                    disponible para agente
+                  </li>
+                  <li>
+                    • <strong>SLA Especial:</strong> Casos crisis → resolución
+                    &lt;5 minutos
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* NUEVA SECCIÓN: Casos de Uso Detallados */}
+      <div className="bg-white p-6 rounded-lg border shadow-lg">
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">
+          🎬 Casos de Uso Detallados - Ejemplos de Diálogos
+        </h3>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+              <h4 className="font-semibold text-blue-700 mb-3">
+                ✅ Caso Exitoso: Cambio de Vuelo
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="bg-white p-2 rounded">
+                  <p>
+                    <strong>👤 Usuario:</strong> "Hola, necesito cambiar mi
+                    vuelo de mañana"
+                  </p>
+                </div>
+                <div className="bg-blue-100 p-2 rounded">
+                  <p>
+                    <strong>🤖 Bot:</strong> "Te ayudo con el cambio de vuelo.
+                    Necesito tu localizador o número de boleto."
+                  </p>
+                </div>
+                <div className="bg-white p-2 rounded">
+                  <p>
+                    <strong>👤 Usuario:</strong> "ABC123"
+                  </p>
+                </div>
+                <div className="bg-blue-100 p-2 rounded">
+                  <p>
+                    <strong>🤖 Bot:</strong> "Encontré tu vuelo VuelaConNosotros
+                    1234 del 15/01 a las 10:30 (Lima→Madrid). Veo que tienes
+                    tarifa Flexible sin penalización. ¿A qué fecha deseas
+                    cambiar?"
+                  </p>
+                </div>
+                <div className="bg-white p-2 rounded">
+                  <p>
+                    <strong>👤 Usuario:</strong> "16 de enero por la tarde"
+                  </p>
+                </div>
+                <div className="bg-blue-100 p-2 rounded">
+                  <p>
+                    <strong>🤖 Bot:</strong> "Perfecto. Tengo 2 opciones para el
+                    16/01:
+                    <br />
+                    🔸 Vuelo 1240 - 15:30 (mismo precio)
+                    <br />
+                    🔸 Vuelo 1242 - 18:45 (mismo precio)
+                    <br />
+                    ¿Cuál prefieres?"
+                  </p>
+                </div>
+                <div className="bg-white p-2 rounded">
+                  <p>
+                    <strong>👤 Usuario:</strong> "El de 18:45"
+                  </p>
+                </div>
+                <div className="bg-blue-100 p-2 rounded">
+                  <p>
+                    <strong>🤖 Bot:</strong> "¡Cambio realizado! Tu nuevo vuelo
+                    es VuelaConNosotros 1242 del 16/01 a las 18:45. He enviado
+                    la confirmación a tu email.
+                    <br />
+                    <br />
+                    🔄 <strong>Próximo paso:</strong> Haz check-in online 24h
+                    antes del vuelo."
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
+              <h4 className="font-semibold text-yellow-700 mb-3">
+                ⚠️ Caso Complejo: Múltiples Restricciones
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="bg-white p-2 rounded">
+                  <p>
+                    <strong>👤 Usuario:</strong> "Necesito cambiar mi vuelo pero
+                    solo tengo 50 euros extra"
+                  </p>
+                </div>
+                <div className="bg-yellow-100 p-2 rounded">
+                  <p>
+                    <strong>🤖 Bot:</strong> "Entiendo tu restricción
+                    presupuestaria. ¿Podrías darme tu localizador para buscar
+                    opciones dentro de tu presupuesto?"
+                  </p>
+                </div>
+                <div className="bg-white p-2 rounded">
+                  <p>
+                    <strong>👤 Usuario:</strong> "DEF456"
+                  </p>
+                </div>
+                <div className="bg-yellow-100 p-2 rounded">
+                  <p>
+                    <strong>🤖 Bot:</strong> "Vuelo DEF456 (Barcelona→Roma,
+                    20/01). Tu tarifa Basic tiene penalización de 30€. Con tu
+                    presupuesto de 50€, tienes 20€ para diferencia de precio.
+                    <br />
+                    <br />
+                    Opciones dentro de tu presupuesto:
+                    <br />
+                    🔸 21/01 - 08:30 (costo total: 45€)
+                    <br />
+                    🔸 22/01 - 14:20 (costo total: 35€)
+                    <br />
+                    <br />
+                    ¿Alguna de estas te sirve?"
+                  </p>
+                </div>
+                <div className="bg-white p-2 rounded">
+                  <p>
+                    <strong>👤 Usuario:</strong> "El 22 está bien"
+                  </p>
+                </div>
+                <div className="bg-yellow-100 p-2 rounded">
+                  <p>
+                    <strong>🤖 Bot:</strong> "¡Perfecto! He procesado el cambio
+                    por 35€ (30€ penalización + 5€ diferencia). Tu nuevo vuelo
+                    es el 22/01 a las 14:20.
+                    <br />
+                    <br />
+                    💳 Se cobrará de la tarjeta terminada en 1234.
+                    <br />
+                    📧 Confirmación enviada a tu email.
+                    <br />
+                    <br />
+                    🔄 <strong>Próximo paso:</strong> Revisar detalles del vuelo
+                    y hacer check-in online."
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* NUEVA SECCIÓN: Estrategia de Evolución Detallada */}
+      <div className="bg-white p-6 rounded-lg border shadow-lg">
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">
+          📈 Estrategia de Evolución y Escalabilidad - Roadmap 12 Meses
+        </h3>
+        <div className="space-y-6">
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="border border-green-200 rounded-lg p-4 bg-green-50">
+              <h4 className="font-semibold text-green-700 mb-2">
+                🚀 Trimestre 1
+              </h4>
+              <h5 className="text-sm font-semibold mb-2">Base Sólida</h5>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Intenciones core (cambio vuelo, equipaje, check-in)</li>
+                <li>• Integración GDS básica</li>
+                <li>• Canales Web + WhatsApp</li>
+                <li>• Métricas básicas</li>
+                <li>• Escalamiento humano simple</li>
+              </ul>
+            </div>
+
+            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+              <h4 className="font-semibold text-blue-700 mb-2">
+                🎯 Trimestre 2
+              </h4>
+              <h5 className="text-sm font-semibold mb-2">
+                Inteligencia Avanzada
+              </h5>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Análisis sentimiento avanzado</li>
+                <li>• Personalización ML</li>
+                <li>• Predicción intenciones</li>
+                <li>• A/B testing automático</li>
+                <li>• Voz (Google/Alexa)</li>
+              </ul>
+            </div>
+
+            <div className="border border-purple-200 rounded-lg p-4 bg-purple-50">
+              <h4 className="font-semibold text-purple-700 mb-2">
+                🔧 Trimestre 3
+              </h4>
+              <h5 className="text-sm font-semibold mb-2">
+                Ecosistema Completo
+              </h5>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Integración CRM completa</li>
+                <li>• Servicios auxiliares (hoteles, autos)</li>
+                <li>• Multidioma (ES, EN, PT)</li>
+                <li>• Auto-aprendizaje continuo</li>
+                <li>• APIs terceros</li>
+              </ul>
+            </div>
+
+            <div className="border border-orange-200 rounded-lg p-4 bg-orange-50">
+              <h4 className="font-semibold text-orange-700 mb-2">
+                🌐 Trimestre 4
+              </h4>
+              <h5 className="text-sm font-semibold mb-2">Expansión Global</h5>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Localización regional</li>
+                <li>• Integración partners</li>
+                <li>• Predicción proactiva</li>
+                <li>• Insights analytics</li>
+                <li>• Certificaciones compliance</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <h4 className="font-semibold text-gray-700 mb-3">
+              ⚙️ Estrategias Técnicas de Escalabilidad
+            </h4>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <h5 className="font-semibold text-blue-600 mb-2">
+                  🏗️ Arquitectura
+                </h5>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Microservicios independientes</li>
+                  <li>• Event-driven architecture</li>
+                  <li>• CQRS para lecturas complejas</li>
+                  <li>• Auto-scaling horizontal</li>
+                  <li>• Circuit breakers</li>
+                </ul>
+              </div>
+              <div>
+                <h5 className="font-semibold text-green-600 mb-2">
+                  🧠 Inteligencia
+                </h5>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Feedback loops automáticos</li>
+                  <li>• Reentrenamiento programado</li>
+                  <li>• Drift detection</li>
+                  <li>• Ensemble models</li>
+                  <li>• Edge computing</li>
+                </ul>
+              </div>
+              <div>
+                <h5 className="font-semibold text-purple-600 mb-2">📊 Datos</h5>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Data lake centralizado</li>
+                  <li>• Streaming real-time</li>
+                  <li>• ML pipelines automatizados</li>
+                  <li>• Synthetic data generation</li>
+                  <li>• Privacy-preserving ML</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
