@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import ArchitectureDiagram from "./ArchitectureDiagram";
+import RAGManager from "./RAGManager";
 
 interface Metrics {
   structure_score: number;
@@ -10,7 +11,6 @@ interface Metrics {
   length_score: number;
   empathy_score: number;
   overall_score: number;
-  // Nuevos campos para detalles
   structure_details: {
     found: string[];
     missing: string[];
@@ -44,8 +44,8 @@ interface EvaluationCase {
   liveResponse?: string;
   simulatedMetrics?: Metrics;
   liveMetrics?: Metrics;
-  responseTime?: number; // Nuevo campo para el tiempo de respuesta
-  timestamp?: string; // Nuevo campo para el timestamp
+  responseTime?: number;
+  timestamp?: string;
 }
 
 interface ExpectedData {
@@ -54,7 +54,6 @@ interface ExpectedData {
   requiresClarification: boolean;
 }
 
-// Dataset con respuestas simuladas para cada caso
 const evaluationDataset = [
   {
     id: 1,
@@ -470,7 +469,7 @@ App > Préstamos > Simular
 export default function NotebookViewer() {
   const [activeTab, setActiveTab] = useState("ejercicio1");
   const [showDataset, setShowDataset] = useState(false);
-  const [selectedCases, setSelectedCases] = useState<number[]>([]); // Cambiado de selectedCase a selectedCases (array)
+  const [selectedCases, setSelectedCases] = useState<number[]>([]);
   const [evaluationCases, setEvaluationCases] = useState<{
     [key: number]: EvaluationCase;
   }>({});
@@ -479,7 +478,6 @@ export default function NotebookViewer() {
     [key: string]: boolean;
   }>({});
 
-  // Importar la función de evaluación
   const evaluateResponse = (
     response: string,
     expectedData: ExpectedData
@@ -491,7 +489,7 @@ export default function NotebookViewer() {
       length_score: 0,
       empathy_score: 0,
       overall_score: 0,
-      // Inicializar nuevos campos
+
       structure_details: { found: [], missing: [], total_expected: 0 },
       keyword_details: { found: [], missing: [], total_expected: 0 },
       clarification_details: {
@@ -671,11 +669,9 @@ export default function NotebookViewer() {
       const caseData = evaluationDataset.find((c) => c.id === caseId);
       if (!caseData) return;
 
-      // Sistema simulado
       const simulatedResponse = caseData.response;
       const simulatedMetrics = evaluateResponse(simulatedResponse, caseData);
 
-      // Sistema real - llamada a ChatGPT
       console.log(`🚀 Iniciando llamada a ChatGPT para caso ${caseId}`);
       console.log(`📝 Query: "${caseData.query}"`);
       console.log(`⏱️ Timestamp: ${new Date().toISOString()}`);
@@ -698,7 +694,6 @@ export default function NotebookViewer() {
       console.log(`⏱️ Tiempo de respuesta: ${responseTime}ms`);
       console.log(`📊 Status: ${response.status}`);
 
-      // Verificar si la respuesta es válida antes de parsear JSON
       if (!response.ok) {
         let errorMessage = `Error del servidor: ${response.status}`;
         try {
@@ -712,7 +707,6 @@ export default function NotebookViewer() {
         return;
       }
 
-      // Obtener el texto de la respuesta primero
       const responseText = await response.text();
 
       let data;
@@ -748,8 +742,8 @@ export default function NotebookViewer() {
           liveResponse: data.response,
           simulatedMetrics: simulatedMetrics,
           liveMetrics: liveMetrics,
-          responseTime: responseTime, // Agregamos el tiempo de respuesta
-          timestamp: new Date().toISOString(), // Agregamos timestamp
+          responseTime: responseTime,
+          timestamp: new Date().toISOString(),
         },
       }));
     } catch (error) {
@@ -821,7 +815,7 @@ export default function NotebookViewer() {
                 : "bg-white text-gray-700 hover:bg-gray-100"
             }`}
           >
-            Entrega Principal
+            Ejercicio 1
           </button>
           <button
             onClick={() => setActiveTab("ejercicio2")}
@@ -831,7 +825,7 @@ export default function NotebookViewer() {
                 : "bg-white text-gray-700 hover:bg-gray-100"
             }`}
           >
-            Arquitectura Cognitiva
+            Ejercicio 2
           </button>
         </div>
 
@@ -2784,6 +2778,9 @@ Mantén siempre un tono profesional, empático y orientado a la solución.`}</pr
               )}
             </div>
 
+            {/* Sistema RAG */}
+            <RAGManager />
+
             {/* Código de Evaluación */}
             <div className="bg-white rounded-lg shadow-lg p-8">
               <h3 className="text-xl font-bold text-black mb-4">
@@ -2797,7 +2794,7 @@ Mantén siempre un tono profesional, empático y orientado a la solución.`}</pr
   length_score: number;
   empathy_score: number;
   overall_score: number;
-  // Nuevos campos para detalles
+  
   structure_details: {
     found: string[];
     missing: string[];
@@ -2839,7 +2836,6 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
     length_score: 0,
     empathy_score: 0,
     overall_score: 0,
-    // Inicializar nuevos campos
     structure_details: { found: [], missing: [], total_expected: 0 },
     keyword_details: { found: [], missing: [], total_expected: 0 },
     clarification_details: {
@@ -3094,17 +3090,127 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
                 éxito y manejo de errores.
               </p>
               <div className="prose max-w-none text-black">
-                <h4>Intenciones Críticas Identificadas:</h4>
-                <ol>
-                  <li>
-                    <strong>Cambiar Vuelo:</strong> Permite a los usuarios
-                    modificar su reserva existente.
-                  </li>
-                  <li>
-                    <strong>Consultar Políticas de Equipaje:</strong>{" "}
-                    Proporciona información sobre las reglas de equipaje.
-                  </li>
-                </ol>
+                <h4>Intenciones Críticas Identificadas (Por Complejidad):</h4>
+
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                  <h6 className="font-semibold text-blue-700 mb-2">
+                    💡 Lógica de Clasificación:
+                  </h6>
+                  <div className="text-sm grid md:grid-cols-3 gap-4">
+                    <div>
+                      <strong>🟢 CONSULTAR:</strong> Solo mostrar información
+                      <br />
+                      <em>
+                        Ej: &quot;¿A qué hora sale mi vuelo?&quot; → Mostrar
+                        horario + gate + asiento
+                      </em>
+                    </div>
+                    <div>
+                      <strong>🟡 MODIFICAR:</strong> Cambiar algo existente
+                      <br />
+                      <em>
+                        Ej: &quot;Quiero cambiar mi asiento&quot; →
+                        Disponibilidad + preferencias + cobro
+                      </em>
+                    </div>
+                    <div>
+                      <strong>🔴 TRANSACCIONAR:</strong> Operaciones complejas
+                      <br />
+                      <em>
+                        Ej: &quot;Cambiar vuelo completo&quot; → Pricing +
+                        políticas + inventario
+                      </em>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h5 className="font-bold text-green-700 mb-2">
+                      🟢 Complejidad Baja (Solo Consultas)
+                    </h5>
+                    <ul className="text-sm space-y-1">
+                      <li>
+                        • <strong>Estado vuelo:</strong> Horario, gate, asiento
+                        asignado
+                      </li>
+                      <li>
+                        • <strong>Equipaje:</strong> Políticas, peso permitido
+                      </li>
+                      <li>
+                        • <strong>Asientos disponibles:</strong> Mostrar mapa
+                        vuelo
+                      </li>
+                      <li>
+                        • <strong>Servicios info:</strong> Comidas,
+                        entretenimiento
+                      </li>
+                      <li>
+                        • <strong>Documentación:</strong> Requisitos
+                        MERCOSUR/visa
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h5 className="font-bold text-blue-700 mb-2">
+                      🔵 Complejidad Baja (Acciones Simples)
+                    </h5>
+                    <ul className="text-sm space-y-1">
+                      <li>
+                        • <strong>Check-in:</strong> Validar identidad + generar
+                        pase
+                      </li>
+                      <li>
+                        • <strong>Pase de abordar:</strong> Re-enviar por
+                        WhatsApp
+                      </li>
+                      <li>
+                        • <strong>Notificaciones:</strong> Activar alertas vuelo
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200 mb-6">
+                  <h5 className="font-bold text-orange-700 mb-2">
+                    🟡 Complejidad Media (Modificaciones)
+                  </h5>
+                  <ul className="text-sm space-y-1">
+                    <li>
+                      • <strong>Cambiar asiento:</strong> Disponibilidad +
+                      preferencias + tarifas premium
+                    </li>
+                    <li>
+                      • <strong>Agregar servicios:</strong> Comidas especiales +
+                      pricing + disponibilidad
+                    </li>
+                    <li>
+                      • <strong>Upgrade clase:</strong> Disponibilidad +
+                      diferencia precio + políticas
+                    </li>
+                    <li>
+                      • <strong>Modificar datos:</strong> Nombre, contacto
+                      (según restricciones boleto)
+                    </li>
+                  </ul>
+                </div>
+                <div className="bg-red-50 p-4 rounded-lg border border-red-200 mb-6">
+                  <h5 className="font-bold text-red-700 mb-2">
+                    🔴 Complejidad Alta (Críticas)
+                  </h5>
+                  <ul className="text-sm space-y-1">
+                    <li>
+                      • <strong>Cambiar vuelo:</strong> Disponibilidad +
+                      políticas + cálculos precio + restricciones tarifarias
+                    </li>
+                    <li>
+                      • <strong>Cancelar/reembolsos:</strong> Políticas
+                      complejas + procesamiento pagos + excepciones
+                    </li>
+                    <li>
+                      • <strong>Gestión crisis:</strong> Vuelos cancelados +
+                      reubicación + compensaciones
+                    </li>
+                  </ul>
+                </div>
 
                 <h5 className="font-bold">
                   Flujo Conversacional para &quot;Cambiar Vuelo&quot;
@@ -3119,7 +3225,8 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
                       <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Usuario</div>
                         <div>
-                          &quot;Quiero cambiar mi vuelo a Asunción.&quot;
+                          &quot;Necesito cambiar mi vuelo a Buenos Aires del
+                          viernes&quot;
                         </div>
                       </div>
                     </div>
@@ -3127,55 +3234,55 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
                       <div className="bg-gray-200 text-gray-800 p-3 rounded-lg rounded-bl-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Bot</div>
                         <div>
-                          &quot;Claro, puedo ayudarte. ¿Me confirmas tu número
-                          de reserva o documento de identidad?&quot;
+                          &quot;¡Por supuesto! Te ayudo con el cambio. ¿Me das
+                          tu código de reserva o número de cédula?&quot;
                         </div>
                       </div>
                     </div>
                     <div className="flex justify-end">
                       <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Usuario</div>
-                        <div>&quot;Mi reserva es ABC123.&quot;</div>
+                        <div>&quot;Mi reserva es VCN458&quot;</div>
                       </div>
                     </div>
                     <div className="flex justify-start">
                       <div className="bg-gray-200 text-gray-800 p-3 rounded-lg rounded-bl-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Bot</div>
                         <div>
-                          &quot;Perfecto. Veo tu vuelo para el 15 de julio.
-                          ¿Para qué fecha te gustaría cambiarlo?&quot;
+                          &quot;Perfecto. Veo tu vuelo ASU-EZE del 15 de julio a
+                          las 14:30. ¿Para qué nueva fecha lo necesitas?&quot;
                         </div>
                       </div>
                     </div>
                     <div className="flex justify-end">
                       <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Usuario</div>
-                        <div>&quot;Para el 20 de julio.&quot;</div>
+                        <div>&quot;Para el 20 de julio&quot;</div>
                       </div>
                     </div>
                     <div className="flex justify-start">
                       <div className="bg-gray-200 text-gray-800 p-3 rounded-lg rounded-bl-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Bot</div>
                         <div>
-                          &quot;He encontrado un vuelo disponible el 20 de julio
-                          a las 10:00 AM. La diferencia de tarifa es de $50.
-                          ¿Deseas confirmar el cambio?&quot;
+                          &quot;Encontré disponibilidad el 20/07 a las 09:15 y
+                          16:45. La diferencia es de USD $85. ¿Cuál horario
+                          prefieres?&quot;
                         </div>
                       </div>
                     </div>
                     <div className="flex justify-end">
                       <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Usuario</div>
-                        <div>&quot;Sí, confirmo.&quot;</div>
+                        <div>&quot;El de la mañana está perfecto&quot;</div>
                       </div>
                     </div>
                     <div className="flex justify-start">
                       <div className="bg-green-500 text-white p-3 rounded-lg rounded-bl-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Bot</div>
                         <div>
-                          &quot;Excelente! Tu vuelo ha sido cambiado. Recibirás
-                          la confirmación en tu correo electrónico en unos
-                          minutos.&quot;
+                          &quot;¡Listo! Vuelo cambiado a VCN812 del 20/07 09:15
+                          ASU-EZE. Confirmación enviada a tu WhatsApp y email.
+                          ¡Buen viaje!&quot;
                         </div>
                       </div>
                     </div>
@@ -3190,49 +3297,45 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
                     <div className="flex justify-end">
                       <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Usuario</div>
-                        <div>&quot;Cámbiame el vuelo.&quot;</div>
+                        <div>&quot;Cámbiame el vuelo&quot;</div>
                       </div>
                     </div>
                     <div className="flex justify-start">
                       <div className="bg-yellow-500 text-white p-3 rounded-lg rounded-bl-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Bot</div>
                         <div>
-                          &quot;Entendido. Para poder ayudarte necesito saber,
-                          ¿cuál es tu número de reserva y a qué destino
-                          viajas?&quot;
+                          &quot;Te ayudo con eso. ¿Me das tu código de reserva o
+                          apellido y cédula para buscarlo?&quot;
                         </div>
                       </div>
                     </div>
                     <div className="flex justify-end">
                       <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Usuario</div>
-                        <div>&quot;No tengo la reserva a mano.&quot;</div>
+                        <div>&quot;No tengo el código acá&quot;</div>
                       </div>
                     </div>
                     <div className="flex justify-start">
                       <div className="bg-yellow-500 text-white p-3 rounded-lg rounded-bl-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Bot</div>
                         <div>
-                          &quot;No te preocupes. Puedo buscar tu reserva con tu
-                          número de documento y apellido. ¿Me los podrías
-                          proporcionar?&quot;
+                          &quot;No hay problema. Con tu cédula y apellido puedo
+                          encontrarlo. ¿Me los das?&quot;
                         </div>
                       </div>
                     </div>
                     <div className="flex justify-end">
                       <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Usuario</div>
-                        <div>&quot;12345678, Pérez.&quot;</div>
+                        <div>&quot;5.234.567, González&quot;</div>
                       </div>
                     </div>
                     <div className="flex justify-start">
                       <div className="bg-green-500 text-white p-3 rounded-lg rounded-bl-sm max-w-xs">
                         <div className="text-xs opacity-75 mb-1">Bot</div>
                         <div>
-                          &quot;Gracias. Encuentro dos reservas a nombre de Juan
-                          Pérez. Una a Bogotá el 15 de julio y otra a Medellín
-                          el 22 de agosto. ¿Cuál de las dos deseas
-                          modificar?&quot;
+                          &quot;Perfecto. Veo dos reservas: ASU-São Paulo el
+                          18/07 y ASU-Lima el 25/07. ¿Cuál querés cambiar?&quot;
                         </div>
                       </div>
                     </div>
@@ -3240,55 +3343,615 @@ const evaluateResponse = (response: string, expectedData: ExpectedData): Metrics
                 </div>
 
                 <h5 className="font-bold">
-                  Desafío Conversacional y Mitigación
+                  📋 Flujo Adicional: Check-in Automatizado (Complejidad Baja)
                 </h5>
+
                 <p>
-                  <strong>Desafío:</strong> La ambigüedad en la solicitud
-                  inicial del usuario (&quot;cámbiame el vuelo&quot;).
-                  <br />
-                  <strong>Mitigación:</strong> La arquitectura está diseñada
-                  para manejar la ambigüedad haciendo preguntas clarificadoras
-                  secuenciales. En lugar de fallar, el bot solicita la
-                  información que le falta (primero reserva, luego documento)
-                  hasta tener los datos necesarios para proceder, guiando al
-                  usuario de forma proactiva.
+                  <strong>Camino Exitoso - Check-in Express:</strong>
                 </p>
+                <div className="bg-gray-50 p-4 rounded-lg border my-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-end">
+                      <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-sm max-w-xs">
+                        <div className="text-xs opacity-75 mb-1">Usuario</div>
+                        <div>&quot;Necesito hacer check-in&quot;</div>
+                      </div>
+                    </div>
+                    <div className="flex justify-start">
+                      <div className="bg-gray-200 text-gray-800 p-3 rounded-lg rounded-bl-sm max-w-xs">
+                        <div className="text-xs opacity-75 mb-1">Bot</div>
+                        <div>
+                          &quot;¡Perfecto! ¿Me das tu apellido y código de
+                          reserva?&quot;
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-sm max-w-xs">
+                        <div className="text-xs opacity-75 mb-1">Usuario</div>
+                        <div>&quot;Silva, VCN892&quot;</div>
+                      </div>
+                    </div>
+                    <div className="flex justify-start">
+                      <div className="bg-green-500 text-white p-3 rounded-lg rounded-bl-sm max-w-xs">
+                        <div className="text-xs opacity-75 mb-1">Bot</div>
+                        <div>
+                          &quot;✅ ¡Check-in listo! Vuelo VCN892 ASU→GRU hoy
+                          16:20. Asiento 12F. Pase enviado a tu WhatsApp. ¡Buen
+                          viaje a São Paulo!&quot;
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <h5 className="font-bold">
+                  ⚠️ Desafíos Conversacionales Críticos y Mitigaciones
+                </h5>
+                <div className="grid md:grid-cols-1 gap-4 mt-4">
+                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <h6 className="font-semibold text-yellow-700 mb-2">
+                      🚨 Desafío 1: Gestión de Crisis Masiva
+                    </h6>
+                    <div className="text-sm space-y-2">
+                      <p>
+                        <strong>Escenario:</strong> Tormenta cancela 50+ vuelos,
+                        10,000 pasajeros afectados simultáneamente
+                      </p>
+                      <p>
+                        <strong>Problema:</strong> Saturación de canales,
+                        información inconsistente, frustración masiva
+                      </p>
+                      <p>
+                        <strong>Mitigación Arquitectónica:</strong>
+                      </p>
+                      <ul className="ml-4 space-y-1">
+                        <li>
+                          • Auto-scaling automático basado en volumen de
+                          consultas
+                        </li>
+                        <li>
+                          • Respuestas proactivas: envío masivo de
+                          notificaciones antes de consultas
+                        </li>
+                        <li>
+                          • Cola de prioridades: pasajeros en conexión →
+                          prioritarios
+                        </li>
+                        <li>
+                          • Fallback a información estática cuando GDS está
+                          saturado
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <h6 className="font-semibold text-red-700 mb-2">
+                      🔄 Desafío 2: Conversaciones Multi-Sesión Complejas
+                    </h6>
+                    <div className="text-sm space-y-2">
+                      <p>
+                        <strong>Escenario:</strong> Usuario inicia cambio de
+                        vuelo en web, continúa en WhatsApp 2 horas después,
+                        termina por teléfono
+                      </p>
+                      <p>
+                        <strong>Problema:</strong> Pérdida de contexto,
+                        re-explicar todo, frustración usuario
+                      </p>
+                      <p>
+                        <strong>Mitigación Técnica:</strong>
+                      </p>
+                      <ul className="ml-4 space-y-1">
+                        <li>• Contexto persistente con Redis: TTL 24 horas</li>
+                        <li>• ID sesión unificado por email/teléfono</li>
+                        <li>
+                          • Resumen automático: &quot;Veo que estabas cambiando
+                          vuelo VCN458 ASU-EZE...&quot;
+                        </li>
+                        <li>• Sincronización cross-canal en tiempo real</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <h6 className="font-semibold text-purple-700 mb-2">
+                      💰 Desafío 3: Cálculos de Precio Complejos en Tiempo Real
+                    </h6>
+                    <div className="text-sm space-y-2">
+                      <p>
+                        <strong>Escenario:</strong> Cambio de vuelo con tarifa
+                        flexible + upgrade + equipaje extra + penalizaciones
+                      </p>
+                      <p>
+                        <strong>Problema:</strong> 15+ reglas tarifarias,
+                        promociones activas, disponibilidad cambiante
+                      </p>
+                      <p>
+                        <strong>Mitigación Conversacional:</strong>
+                      </p>
+                      <ul className="ml-4 space-y-1">
+                        <li>
+                          • Desglose paso a paso: &quot;Calculando diferencia de
+                          tarifa... ✅&quot;
+                        </li>
+                        <li>
+                          • Explicación clara: &quot;Diferencia tarifa USD $120
+                          + penalización ₲150.000 = Total USD $185&quot;
+                        </li>
+                        <li>
+                          • Timeout manejo: &quot;Pricing toma más tiempo,
+                          ¿prefieres que te llame?&quot;
+                        </li>
+                        <li>• Confirmación explícita antes de procesar pago</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h6 className="font-semibold text-blue-700 mb-2">
+                      🌍 Desafío 4: Regulaciones Cambiantes por País
+                    </h6>
+                    <div className="text-sm space-y-2">
+                      <p>
+                        <strong>Escenario:</strong> COVID, requisitos
+                        USA/Europa, documentos MERCOSUR cambian semanalmente
+                      </p>
+                      <p>
+                        <strong>Problema:</strong> Información desactualizada
+                        puede causar problemas legales/migratorios
+                      </p>
+                      <p>
+                        <strong>Mitigación Operacional:</strong>
+                      </p>
+                      <ul className="ml-4 space-y-1">
+                        <li>
+                          • Base conocimiento con versionado y fechas de
+                          actualización
+                        </li>
+                        <li>
+                          • Disclaimers automáticos: &quot;Info actualizada al
+                          [fecha], confirma en consulado&quot;
+                        </li>
+                        <li>
+                          • Escalamiento automático para casos complejos de
+                          documentación
+                        </li>
+                        <li>
+                          • Integración con fuentes oficiales (IATA, gobiernos)
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-lg p-8">
               <h3 className="text-xl font-bold text-black mb-4">
-                3. Estrategia de Evolución y Escalabilidad
+                3. Plan de Implementación Pragmático
               </h3>
               <div className="prose max-w-none text-black">
                 <p>
-                  La arquitectura se diseña para ser escalable y evolutiva desde
-                  su concepción:
+                  Roadmap de implementación con objetivos concretos y medibles
+                  para VuelaConNosotros:
                 </p>
-                <ul>
-                  <li>
-                    <strong>Escalabilidad:</strong> La arquitectura basada en
-                    microservicios permite que cada componente (NLU, Gestor de
-                    Diálogo, etc.) se escale de forma independiente. Si aumenta
-                    el número de usuarios, podemos asignar más recursos solo al
-                    NLU sin afectar los otros componentes.
-                  </li>
-                  <li>
-                    <strong>Nuevas Funcionalidades:</strong> La capa de
-                    integración y el gestor de diálogo modular permiten agregar
-                    nuevas herramientas y APIs (ej. un nuevo sistema de
-                    check-in) sin modificar el núcleo del bot. Simplemente se
-                    añade una nueva habilidad al gestor.
-                  </li>
-                  <li>
-                    <strong>Evolución Continua:</strong> Se implementará un
-                    ciclo de feedback donde las conversaciones con baja
-                    puntuación de satisfacción o con fallos de comprensión son
-                    revisadas por un equipo humano. Estas conversaciones se
-                    utilizan para re-entrenar y ajustar el modelo de NLU y el
-                    prompt, mejorando continuamente la inteligencia del bot.
-                  </li>
-                </ul>
+
+                <div className="grid md:grid-cols-2 gap-6 mt-6">
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h4 className="font-bold text-green-700 mb-3">
+                      📈 Fase 1 (Meses 1-3) - Solo Consultas + Check-in
+                    </h4>
+                    <ul className="text-sm space-y-1">
+                      <li>
+                        • <strong>Consultas básicas:</strong> Estado vuelo,
+                        equipaje, asientos, servicios, documentación
+                      </li>
+                      <li>
+                        • <strong>Acción simple:</strong> Check-in automatizado
+                      </li>
+                      <li>
+                        • <strong>Canales:</strong> WhatsApp + Web chat
+                      </li>
+                      <li>
+                        • <strong>Integración:</strong> GDS solo lectura + base
+                        conocimiento estática
+                      </li>
+                      <li>
+                        • <strong>Objetivo:</strong> 80% consultas informativas
+                        resueltas sin agente
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <h4 className="font-bold text-orange-700 mb-3">
+                      🎯 Fase 2 (Meses 4-6) - Modificaciones Simples
+                    </h4>
+                    <ul className="text-sm space-y-1">
+                      <li>
+                        • <strong>Modificaciones:</strong> Cambiar asiento,
+                        agregar servicios, upgrade
+                      </li>
+                      <li>
+                        • <strong>Personalización:</strong> Preferencias
+                        cliente, historial
+                      </li>
+                      <li>
+                        • <strong>Integración:</strong> GDS escritura + payment
+                        gateway básico
+                      </li>
+                      <li>
+                        • <strong>Canales:</strong> + Teléfono con ASR, app
+                        móvil
+                      </li>
+                      <li>
+                        • <strong>Objetivo:</strong> 70% modificaciones simples
+                        automatizadas
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-1 gap-6 mt-4">
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <h4 className="font-bold text-red-700 mb-3">
+                      🚀 Fase 3 (Meses 7-12) - Transacciones Críticas Complejas
+                    </h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <ul className="text-sm space-y-1">
+                        <li>
+                          • <strong>Transacciones complejas:</strong> Cambio
+                          vuelo completo, cancelaciones con reembolso
+                        </li>
+                        <li>
+                          • <strong>Gestión crisis:</strong> Reubicación
+                          automática, compensaciones, comunicación masiva
+                        </li>
+                        <li>
+                          • <strong>Integración avanzada:</strong> Pricing
+                          engines, inventory real-time, payment processing
+                        </li>
+                      </ul>
+                      <ul className="text-sm space-y-1">
+                        <li>
+                          • <strong>IA predictiva:</strong> Análisis
+                          sentimiento, detección problemas, escalamiento
+                          inteligente
+                        </li>
+                        <li>
+                          • <strong>Escalabilidad crisis:</strong> 10,000+
+                          usuarios simultáneos durante eventos climáticos
+                        </li>
+                        <li>
+                          • <strong>Objetivo:</strong> 60% transacciones
+                          complejas automatizadas, gestión crisis proactiva
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 bg-gray-50 p-4 rounded-lg border">
+                  <h4 className="font-bold text-gray-700 mb-3">
+                    🎛️ Consideraciones Técnicas Críticas
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <h5 className="font-semibold mb-2">
+                        Escalabilidad Real:
+                      </h5>
+                      <ul className="space-y-1">
+                        <li>• Picos de tráfico en temporada alta (Dic-Mar)</li>
+                        <li>
+                          • Eventos disruptivos (clima, cancelaciones masivas)
+                        </li>
+                        <li>• Crecimiento orgánico 20% anual de consultas</li>
+                        <li>• Auto-scaling basado en métricas reales</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold mb-2">Métricas de Éxito:</h5>
+                      <ul className="space-y-1">
+                        <li>• Reducción 40% llamadas call center</li>
+                        <li>• CSAT &gt;4.2/5.0 conversaciones bot</li>
+                        <li>• ROI positivo en 8 meses</li>
+                        <li>• Tiempo resolución &lt;3 minutos promedio</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                  <h4 className="font-bold text-indigo-700 mb-3">
+                    🔧 Herramientas Específicas: Obtener vs Enviar Información
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <h5 className="font-semibold mb-2 text-indigo-600">
+                        📥 Herramientas para OBTENER:
+                      </h5>
+                      <ul className="space-y-1">
+                        <li>
+                          • <strong>GDS APIs:</strong> Amadeus, Sabre -
+                          disponibilidad tiempo real
+                        </li>
+                        <li>
+                          • <strong>Pricing Engine:</strong> Cálculos tarifarios
+                          complejos
+                        </li>
+                        <li>
+                          • <strong>CRM Database:</strong> Historial cliente,
+                          preferencias
+                        </li>
+                        <li>
+                          • <strong>Inventory System:</strong> Asientos,
+                          servicios disponibles
+                        </li>
+                        <li>
+                          • <strong>External APIs:</strong> Clima, restricciones
+                          países
+                        </li>
+                        <li>
+                          • <strong>Knowledge Base:</strong> Políticas, FAQ
+                          actualizadas
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold mb-2 text-indigo-600">
+                        📤 Herramientas para ENVIAR:
+                      </h5>
+                      <ul className="space-y-1">
+                        <li>
+                          • <strong>Reservation System:</strong>{" "}
+                          Crear/modificar/cancelar reservas
+                        </li>
+                        <li>
+                          • <strong>Payment Gateway:</strong> Procesar
+                          reembolsos, cargos
+                        </li>
+                        <li>
+                          • <strong>Notification Hub:</strong> SMS, email, push
+                          notifications
+                        </li>
+                        <li>
+                          • <strong>Document Generator:</strong> Pases abordar,
+                          vouchers
+                        </li>
+                        <li>
+                          • <strong>Ticketing System:</strong> Abrir casos
+                          soporte, escalamiento
+                        </li>
+                        <li>
+                          • <strong>Analytics Collector:</strong> Métricas
+                          conversación, feedback
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <h4 className="font-bold text-purple-700 mb-3">
+                    🧠 Evolución Continua del Conocimiento
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <h5 className="font-semibold mb-2">
+                        Nuevas Bases de Conocimiento:
+                      </h5>
+                      <ul className="space-y-1">
+                        <li>
+                          • <strong>Rutas nuevas:</strong> Auto-import desde
+                          planning comercial
+                        </li>
+                        <li>
+                          • <strong>Políticas actualizadas:</strong> Versionado
+                          con rollback
+                        </li>
+                        <li>
+                          • <strong>Promociones temporales:</strong> TTL
+                          automático
+                        </li>
+                        <li>
+                          • <strong>Regulaciones países:</strong> Sync con
+                          fuentes oficiales
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold mb-2">
+                        Mejora Automática IA:
+                      </h5>
+                      <ul className="space-y-1">
+                        <li>
+                          • <strong>Feedback loops:</strong> Satisfacción →
+                          reentrenamiento
+                        </li>
+                        <li>
+                          • <strong>Intent discovery:</strong> Nuevas
+                          intenciones desde conversaciones
+                        </li>
+                        <li>
+                          • <strong>Error pattern detection:</strong> Fallos
+                          recurrentes → mejoras
+                        </li>
+                        <li>
+                          • <strong>A/B testing:</strong> Optimización
+                          respuestas automática
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h4 className="font-bold text-green-700 mb-3">
+                    🇵🇾 Consideraciones Específicas Paraguay
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <h5 className="font-semibold mb-2 text-green-600">
+                        🌍 Contexto Local:
+                      </h5>
+                      <ul className="space-y-1">
+                        <li>
+                          • <strong>Idiomas:</strong> Soporte guaraní y español
+                          nativo
+                        </li>
+                        <li>
+                          • <strong>Regulaciones:</strong> Cumplimiento ANAC
+                          Paraguay
+                        </li>
+                        <li>
+                          • <strong>Conexiones:</strong> Hub Silvio Pettirossi
+                          (ASU)
+                        </li>
+                        <li>
+                          • <strong>Destinos frecuentes:</strong> Buenos Aires,
+                          São Paulo, Lima
+                        </li>
+                        <li>
+                          • <strong>Temporadas:</strong> Alta Dic-Mar, baja
+                          Jun-Ago
+                        </li>
+                        <li>
+                          • <strong>Clima:</strong> Tormentas Oct-Mar afectan
+                          operaciones
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold mb-2 text-green-600">
+                        📱 Canales Prioritarios:
+                      </h5>
+                      <ul className="space-y-1">
+                        <li>
+                          • <strong>WhatsApp:</strong> Canal principal (80%
+                          usuarios PY)
+                        </li>
+                        <li>
+                          • <strong>Teléfono:</strong> Respaldo para urgencias
+                        </li>
+                        <li>
+                          • <strong>Web Chat:</strong> Usuarios
+                          corporativos/jóvenes
+                        </li>
+                        <li>
+                          • <strong>SMS:</strong> Notificaciones vuelos/cambios
+                          de gate
+                        </li>
+                        <li>
+                          • <strong>Horarios:</strong> 5:00-23:00 (operaciones
+                          aeropuerto)
+                        </li>
+                        <li>
+                          • <strong>Moneda:</strong> Guaraníes (₲) y USD para
+                          internacionales
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h4 className="font-bold text-blue-700 mb-3">
+                    📊 Plan de Implementación - VuelaConNosotros Paraguay
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-white p-3 rounded border">
+                      <h5 className="font-semibold text-blue-600 mb-2">
+                        🚀 Fase 1: Consultas + Check-in (Meses 1-3)
+                      </h5>
+                      <ul className="text-sm space-y-1">
+                        <li>
+                          • <strong>Consultas:</strong> Estado vuelos
+                          ASU-EZE/GRU, equipaje ANAC, asientos, servicios
+                        </li>
+                        <li>
+                          • <strong>Acción:</strong> Check-in automatizado
+                        </li>
+                        <li>
+                          • <strong>Canales:</strong> WhatsApp (prioritario) +
+                          Web Chat
+                        </li>
+                        <li>
+                          • <strong>Idiomas:</strong> Español + escalamiento
+                          guaraní
+                        </li>
+                        <li>
+                          • <strong>Objetivo:</strong> 80% consultas
+                          informativas sin agente
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="bg-white p-3 rounded border">
+                      <h5 className="font-semibold text-blue-600 mb-2">
+                        🎯 Fase 2: Modificaciones (Meses 4-6)
+                      </h5>
+                      <ul className="text-sm space-y-1">
+                        <li>
+                          • <strong>Modificar:</strong> Cambiar asientos,
+                          agregar comidas, upgrades
+                        </li>
+                        <li>
+                          • <strong>Info avanzada:</strong> Documentación
+                          MERCOSUR/USA/Europa
+                        </li>
+                        <li>
+                          • <strong>Canales:</strong> + Teléfono, app móvil, SMS
+                          proactivo
+                        </li>
+                        <li>
+                          • <strong>Personalización:</strong> Preferencias
+                          cliente frecuente
+                        </li>
+                        <li>
+                          • <strong>Objetivo:</strong> 70% modificaciones
+                          simples automatizadas
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <h4 className="font-bold text-yellow-700 mb-3">
+                    ⚠️ Desafíos Técnicos de Escalabilidad
+                  </h4>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <strong>Desafío:</strong> Picos de tráfico en temporada
+                      alta (Dic-Mar) + conexiones internacionales
+                      <br />
+                      <strong>Mitigación:</strong> Auto-scaling predictivo +
+                      cache inteligente para rutas frecuentes ASU-EZE/GRU
+                    </div>
+                    <div>
+                      <strong>Desafío:</strong> Procesamiento bilingüe (guaraní
+                      tiene menos recursos NLP)
+                      <br />
+                      <strong>Mitigación:</strong> Modelos híbridos español +
+                      detección guaraní + fallback a agente nativo
+                    </div>
+                    <div>
+                      <strong>Desafío:</strong> Integración GDS internacional
+                      desde Paraguay (latencia)
+                      <br />
+                      <strong>Mitigación:</strong> Cache regional + CDN en
+                      Brasil/Argentina + fallback local
+                    </div>
+                    <div>
+                      <strong>Desafío:</strong> Compliance ANAC + regulaciones
+                      múltiples destinos (USA, Europa, MERCOSUR)
+                      <br />
+                      <strong>Mitigación:</strong> Base conocimiento multi-país
+                      + alertas regulatorias automáticas
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
